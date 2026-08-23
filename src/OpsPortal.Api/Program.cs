@@ -24,3 +24,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Expose top-level API entry point to test assembly
+public partial class Program { }
