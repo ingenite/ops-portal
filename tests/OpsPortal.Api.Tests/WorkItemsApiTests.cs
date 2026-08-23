@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using OpsPortal.Api.Models;
 using Microsoft.AspNetCore.Mvc.Testing;
 
@@ -20,11 +21,31 @@ public sealed class WorkItemsApiTests {
         // await - pause test until HTTP response arrives
         var response = await client.GetAsync("/api/work-items");
 
-        // Assert - check observable results
+        // Assert - response
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
+
+        using var document = await JsonDocument.ParseAsync(
+            await response.Content.ReadAsStreamAsync());
+
+        Assert.Equal(JsonValueKind.Array, document.RootElement.ValueKind);
     }
 
+    [Fact]
+    public async Task GetById_returns_not_found_when_the_work_item_does_not_exist() {
+        // Arrange
+        using var factory = new WebApplicationFactory<Program>();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+            BaseAddress = new Uri("https://localhost")
+        });
+
+        // Act - GetById
+        var getResponse = await client.GetAsync($"/api/work-items/{Guid.NewGuid():N}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
+
+    }
     [Fact]
     public async Task Create_then_get_returns_created_work_item() {
         // Arrange
@@ -34,7 +55,7 @@ public sealed class WorkItemsApiTests {
         });
 
         // Unique title - avoids collisions/accidental test overlap
-        var title = $"Integration test item (Guid.NewGuid():N)";
+        var title = $"Integration test item {Guid.NewGuid():N}";
 
         // Act
         var createResponse = await client.PostAsJsonAsync(
@@ -43,7 +64,6 @@ public sealed class WorkItemsApiTests {
 
         // Assert - POST contract
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
-        Assert.NotNull(createResponse.Headers.Location);
 
         // read the response back from POST
         var created = await createResponse.Content.ReadFromJsonAsync<WorkItem>();
@@ -56,7 +76,8 @@ public sealed class WorkItemsApiTests {
         Assert.NotEqual(default, created.UpdatedAtUtc);
 
         // Act - follow the location returned from POST
-        var getResponse = await client.GetAsync(createResponse.Headers.Location!);
+        var location = Assert.IsType<Uri>(createResponse.Headers.Location);
+        var getResponse = await client.GetAsync(location);
 
         // Assert - GET contract and persistence
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
@@ -67,5 +88,128 @@ public sealed class WorkItemsApiTests {
         Assert.Equal(created.Id, fetched.Id);
         Assert.Equal(created.Title, fetched.Title);
         Assert.Equal(created.Status, fetched.Status);
+    }
+    [Fact]
+    public async Task Create_without_title_returns_bad_request() {
+        // Arrange
+        using var factory = new WebApplicationFactory<Program>();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+            BaseAddress = new Uri("https://localhost")
+        });
+
+        // Act - POST without title
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/work-items",
+            new { });
+
+        // Assert - HTTP/400
+        Assert.Equal(HttpStatusCode.BadRequest, createResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Update_status_then_get_returns_persisted_changes() {
+        // Arrange
+        using var factory = new WebApplicationFactory<Program>();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+            BaseAddress = new Uri("https://localhost")
+        });
+
+        var title = $"Work Item to update {Guid.NewGuid():N}";
+
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/work-items",
+            new { title });
+
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+
+        var created = await createResponse.Content.ReadFromJsonAsync<WorkItem>();
+
+        Assert.NotNull(created);
+
+        // Act - PATCH
+        var patchResponse = await client.PatchAsJsonAsync(
+            $"/api/work-items/{created.Id}",
+            new { status = "Completed" });
+
+        Assert.Equal(HttpStatusCode.OK, patchResponse.StatusCode);
+
+        // Assert - PATCH results
+        var updated = await patchResponse.Content.ReadFromJsonAsync<WorkItem>();
+
+        Assert.NotNull(updated);
+        Assert.Equal(created.Id, updated.Id);
+        Assert.Equal(title, updated.Title);
+        Assert.Equal("Completed", updated.Status);
+
+        // Assert - change persisted
+        var getResponse = await client.GetAsync($"/api/work-items/{created.Id}");
+
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+
+        var fetched = await getResponse.Content.ReadFromJsonAsync<WorkItem>();
+
+        Assert.NotNull(fetched);
+        Assert.Equal(created.Title, fetched.Title);
+        Assert.Equal("Completed", fetched.Status);
+    }
+
+    [Fact]
+    public async Task Update_with_no_fields_returns_bad_request() {
+        // Arrange
+        using var factory = new WebApplicationFactory<Program>();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+            BaseAddress = new Uri("https://localhost")
+        });
+
+        // Act - PATCH contains empty body
+        var patchResponse = await client.PatchAsJsonAsync(
+            $"/api/work-items/{Guid.NewGuid():N}",
+            new { });
+
+        // Assert - HTTP/400 Bad Request
+        Assert.Equal(HttpStatusCode.BadRequest, patchResponse.StatusCode);
+    }
+    [Fact]
+    public async Task Update_status_fails_validation_returns_bad_request() {
+        // Arrange
+        using var factory = new WebApplicationFactory<Program>();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+            BaseAddress = new Uri("https://localhost")
+        });
+        var title = $"Update Status Work Item {Guid.NewGuid():N}";
+
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/work-items",
+            new { title });
+
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+
+        var created = await createResponse.Content.ReadFromJsonAsync<WorkItem>();
+
+        Assert.NotNull(created);
+
+        // Act - PATCH unsupported Status value
+        var patchResponse = await client.PatchAsJsonAsync(
+            $"/api/work-items/{created.Id}",
+            new { status = "NotStarted" });
+
+        // Assert - HTTP/400
+        Assert.Equal(HttpStatusCode.BadRequest, patchResponse.StatusCode);
+    }
+    [Fact]
+    public async Task Update_returns_not_found_when_the_work_item_does_not_exist() {
+        // Arrange
+        using var factory = new WebApplicationFactory<Program>();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+            BaseAddress = new Uri("https://localhost")
+        });
+
+        // Act - PATCH with invalid or nonexistent id
+        var patchResponse = await client.PatchAsJsonAsync(
+            $"/api/work-items/{Guid.NewGuid():N}",
+            new { status = "Completed" });
+
+        // Assert - HTTP/404 Not Found
+        Assert.Equal(HttpStatusCode.NotFound, patchResponse.StatusCode);
     }
 }
