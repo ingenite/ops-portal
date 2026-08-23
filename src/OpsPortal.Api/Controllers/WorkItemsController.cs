@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+
 using OpsPortal.Api.Contracts;
 using OpsPortal.Api.Models;
 using OpsPortal.Api.Storage;
@@ -7,24 +8,20 @@ namespace OpsPortal.Api.Controllers;
 
 [ApiController]
 [Route("api/work-items")]
-public sealed class WorkItemsController : ControllerBase
-{
+public sealed class WorkItemsController : ControllerBase {
     private readonly IWorkItemStore _workItemStore;
 
-    public WorkItemsController(IWorkItemStore workItemStore)
-    {
+    public WorkItemsController(IWorkItemStore workItemStore) {
         _workItemStore = workItemStore;
     }
 
     [HttpGet]
-    public ActionResult<IReadOnlyCollection<WorkItem>> GetAll()
-    {
+    public ActionResult<IReadOnlyCollection<WorkItem>> GetAll() {
         return Ok(_workItemStore.GetAll());
     }
 
     [HttpGet("{id:guid}")]
-    public ActionResult<WorkItem> GetById(Guid id)
-    {
+    public ActionResult<WorkItem> GetById(Guid id) {
         var workItem = _workItemStore.GetById(id);
 
         return workItem is null
@@ -33,8 +30,7 @@ public sealed class WorkItemsController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<WorkItem> Create(CreateWorkItemRequest request)
-    {
+    public ActionResult<WorkItem> Create(CreateWorkItemRequest request) {
         var workItem = _workItemStore.Create(request.Title!);
 
         return CreatedAtAction(
@@ -44,12 +40,9 @@ public sealed class WorkItemsController : ControllerBase
     }
 
     [HttpPatch("{id:guid}")]
-    public ActionResult<WorkItem> Update(Guid id, UpdateWorkItemRequest request)
-    {
-        if (request.Title is null && request.Status is null)
-        {
-            return BadRequest(new ProblemDetails
-            {
+    public ActionResult<WorkItem> Update(Guid id, UpdateWorkItemRequest request) {
+        if (request.Title is null && request.Status is null) {
+            return BadRequest(new ProblemDetails {
                 Title = "Invalid update request",
                 Detail = "Provide at least one supported field to update.",
                 Status = StatusCodes.Status400BadRequest

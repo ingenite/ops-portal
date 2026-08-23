@@ -13,8 +13,7 @@ builder.Services.AddSingleton<IWorkItemStore, InMemoryWorkItemStore>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+if (app.Environment.IsDevelopment()) {
     app.MapOpenApi();
 }
 
