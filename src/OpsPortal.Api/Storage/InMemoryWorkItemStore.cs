@@ -7,25 +7,27 @@ public sealed class InMemoryWorkItemStore : IWorkItemStore {
     private readonly Dictionary<Guid, WorkItem> _workItems = new();
 
     public InMemoryWorkItemStore() {
-        Create("Review integration documentation");
-        Create("Design the reporting page");
+        CreateAsync("Review integration documentation");
+        CreateAsync("Design the reporting page");
     }
 
-    public IReadOnlyCollection<WorkItem> GetAll() {
+    public Task<IReadOnlyCollection<WorkItem>> GetAllAsync() {
         lock (_syncRoot) {
-            return _workItems.Values
+            var workItems = _workItems.Values
                 .OrderByDescending(workItem => workItem.UpdatedAtUtc)
                 .ToArray();
+
+            return Task.FromResult<IReadOnlyCollection<WorkItem>>(workItems);
         }
     }
 
-    public WorkItem? GetById(Guid id) {
+    public Task<WorkItem?> GetByIdAsync(Guid id) {
         lock (_syncRoot) {
-            return _workItems.GetValueOrDefault(id);
+            return Task.FromResult(_workItems.GetValueOrDefault(id));
         }
     }
 
-    public WorkItem Create(string title) {
+    public Task<WorkItem> CreateAsync(string title) {
         var now = DateTimeOffset.UtcNow;
 
         var workItem = new WorkItem {
@@ -40,13 +42,13 @@ public sealed class InMemoryWorkItemStore : IWorkItemStore {
             _workItems.Add(workItem.Id, workItem);
         }
 
-        return workItem;
+        return Task.FromResult(workItem);
     }
 
-    public WorkItem? Update(Guid id, string? title, string? status) {
+    public Task<WorkItem?> UpdateAsync(Guid id, string? title, string? status) {
         lock (_syncRoot) {
             if (!_workItems.TryGetValue(id, out var workItem)) {
-                return null;
+                return Task.FromResult<WorkItem?>(null);
             }
 
             if (title is not null) {
@@ -59,7 +61,7 @@ public sealed class InMemoryWorkItemStore : IWorkItemStore {
 
             workItem.UpdatedAtUtc = DateTimeOffset.UtcNow;
 
-            return workItem;
+            return Task.FromResult<WorkItem?>(workItem);
         }
     }
 }

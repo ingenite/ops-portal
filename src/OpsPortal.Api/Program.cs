@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using OpsPortal.Api.Data;
 using OpsPortal.Api.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +9,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+var connectionString = builder.Configuration.GetConnectionString("OpsPortalDatabase")
+    ?? throw new InvalidOperationException(
+        "Connection string 'OpsPortalDatabase' was not found.");
+
+builder.Services.AddDbContext<OpsPortalDbContext>(options =>
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddSingleton<IWorkItemStore, InMemoryWorkItemStore>();
 

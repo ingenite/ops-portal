@@ -3,11 +3,11 @@ using OpsPortal.Api.Models;
 namespace OpsPortal.Api.Storage;
 
 public interface IWorkItemStore {
-    IReadOnlyCollection<WorkItem> GetAll();
+    Task<IReadOnlyCollection<WorkItem>> GetAllAsync();
 
-    WorkItem? GetById(Guid id);
+    Task<WorkItem?> GetByIdAsync(Guid id);
 
-    WorkItem Create(string title);
+    Task<WorkItem> CreateAsync(string title);
 
-    WorkItem? Update(Guid id, string? title, string? status);
+    Task<WorkItem?> UpdateAsync(Guid id, string? title, string? status);
 }

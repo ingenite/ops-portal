@@ -16,13 +16,13 @@ public sealed class WorkItemsController : ControllerBase {
     }
 
     [HttpGet]
-    public ActionResult<IReadOnlyCollection<WorkItem>> GetAll() {
-        return Ok(_workItemStore.GetAll());
+    public async Task<ActionResult<IReadOnlyCollection<WorkItem>>> GetAll() {
+        return Ok(await _workItemStore.GetAllAsync());
     }
 
     [HttpGet("{id:guid}")]
-    public ActionResult<WorkItem> GetById(Guid id) {
-        var workItem = _workItemStore.GetById(id);
+    public async Task<ActionResult<WorkItem>> GetById(Guid id) {
+        var workItem = await _workItemStore.GetByIdAsync(id);
 
         return workItem is null
             ? NotFound()
@@ -30,8 +30,8 @@ public sealed class WorkItemsController : ControllerBase {
     }
 
     [HttpPost]
-    public ActionResult<WorkItem> Create(CreateWorkItemRequest request) {
-        var workItem = _workItemStore.Create(request.Title!);
+    public async Task<ActionResult<WorkItem>> Create(CreateWorkItemRequest request) {
+        var workItem = await _workItemStore.CreateAsync(request.Title!);
 
         return CreatedAtAction(
             nameof(GetById),
@@ -40,7 +40,7 @@ public sealed class WorkItemsController : ControllerBase {
     }
 
     [HttpPatch("{id:guid}")]
-    public ActionResult<WorkItem> Update(Guid id, UpdateWorkItemRequest request) {
+    public async Task<ActionResult<WorkItem>> Update(Guid id, UpdateWorkItemRequest request) {
         if (request.Title is null && request.Status is null) {
             return BadRequest(new ProblemDetails {
                 Title = "Invalid update request",
@@ -49,7 +49,7 @@ public sealed class WorkItemsController : ControllerBase {
             });
         }
 
-        var workItem = _workItemStore.Update(id, request.Title, request.Status);
+        var workItem = await _workItemStore.UpdateAsync(id, request.Title, request.Status);
 
         return workItem is null
             ? NotFound()
