@@ -17,7 +17,7 @@ var connectionString = builder.Configuration.GetConnectionString("OpsPortalDatab
 builder.Services.AddDbContext<OpsPortalDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-builder.Services.AddSingleton<IWorkItemStore, InMemoryWorkItemStore>();
+builder.Services.AddScoped<IWorkItemStore, SqlWorkItemStore>();
 
 var app = builder.Build();
 

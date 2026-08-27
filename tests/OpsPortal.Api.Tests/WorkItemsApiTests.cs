@@ -12,7 +12,7 @@ public sealed class WorkItemsApiTests {
     public async Task GetAll_returns_ok_with_a_json_array() {
         // Arrange - create an app factory/client and prepare input
         // `using var` disposes the factory/client automatically at the end of the test
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new OpsPortalApiFactory();
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
@@ -34,7 +34,7 @@ public sealed class WorkItemsApiTests {
     [Fact]
     public async Task GetById_returns_not_found_when_the_work_item_does_not_exist() {
         // Arrange
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new OpsPortalApiFactory();
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
@@ -49,7 +49,7 @@ public sealed class WorkItemsApiTests {
     [Fact]
     public async Task Create_then_get_returns_created_work_item() {
         // Arrange
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new OpsPortalApiFactory();
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
@@ -92,7 +92,7 @@ public sealed class WorkItemsApiTests {
     [Fact]
     public async Task Create_without_title_returns_bad_request() {
         // Arrange
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new OpsPortalApiFactory();
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
@@ -109,7 +109,7 @@ public sealed class WorkItemsApiTests {
     [Fact]
     public async Task Update_status_then_get_returns_persisted_changes() {
         // Arrange
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new OpsPortalApiFactory();
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
@@ -156,7 +156,7 @@ public sealed class WorkItemsApiTests {
     [Fact]
     public async Task Update_with_no_fields_returns_bad_request() {
         // Arrange
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new OpsPortalApiFactory();
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
@@ -172,7 +172,7 @@ public sealed class WorkItemsApiTests {
     [Fact]
     public async Task Update_status_fails_validation_returns_bad_request() {
         // Arrange
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new OpsPortalApiFactory();
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
@@ -199,7 +199,7 @@ public sealed class WorkItemsApiTests {
     [Fact]
     public async Task Update_returns_not_found_when_the_work_item_does_not_exist() {
         // Arrange
-        using var factory = new WebApplicationFactory<Program>();
+        using var factory = new OpsPortalApiFactory();
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
