@@ -7,8 +7,30 @@ public sealed class InMemoryWorkItemStore : IWorkItemStore {
     private readonly Dictionary<Guid, WorkItem> _workItems = new();
 
     public InMemoryWorkItemStore() {
-        CreateAsync("Review integration documentation");
-        CreateAsync("Design the reporting page");
+        CreateWorkItem("Review integration documentation");
+        CreateWorkItem("Design the reporting page");
+    }
+
+    public Task<WorkItem> CreateAsync(string title) {
+        return Task.FromResult(CreateWorkItem(title));
+    }
+
+    private WorkItem CreateWorkItem(string title) {
+        var now = DateTimeOffset.UtcNow;
+
+        var workItem = new WorkItem {
+            Id = Guid.NewGuid(),
+            Title = title.Trim(),
+            Status = "Open",
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now
+        };
+
+        lock (_syncRoot) {
+            _workItems.Add(workItem.Id, workItem);
+        }
+
+        return workItem;
     }
 
     public Task<IReadOnlyCollection<WorkItem>> GetAllAsync() {
@@ -25,24 +47,6 @@ public sealed class InMemoryWorkItemStore : IWorkItemStore {
         lock (_syncRoot) {
             return Task.FromResult(_workItems.GetValueOrDefault(id));
         }
-    }
-
-    public Task<WorkItem> CreateAsync(string title) {
-        var now = DateTimeOffset.UtcNow;
-
-        var workItem = new WorkItem {
-            Id = Guid.NewGuid(),
-            Title = title.Trim(),
-            Status = "Open",
-            CreatedAtUtc = now,
-            UpdatedAtUtc = now
-        };
-
-        lock (_syncRoot) {
-            _workItems.Add(workItem.Id, workItem);
-        }
-
-        return Task.FromResult(workItem);
     }
 
     public Task<WorkItem?> UpdateAsync(Guid id, string? title, string? status) {
