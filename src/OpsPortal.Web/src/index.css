@@ -1,0 +1,41 @@
+:root {
+  font-family: system-ui, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+  color: #e2e8f0;
+  background: #0f172a;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+main {
+  width: min(48rem, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+h1 {
+  margin-top: 0;
+  color: #f8fafc;
+}
+
+ul {
+  padding-left: 1.5rem;
+}
+
+li + li {
+  margin-top: 0.5rem;
+}
+
+[role='alert'] {
+  color: #fca5a5;
+}
