@@ -10,38 +10,35 @@ A personal learning project that models the architecture and delivery practices 
 - WSL2
 - Docker Desktop (requires WSL2)
 - Git for Windows
-- optional, pwsh
+- pwsh
 
 ### Initial Setup
 
-1. Create `.\infra\.env` and add `MSSQL_SA_PASSWORD=<SqlSAPassword>`
+1. In pwsh, run these commands from the repository root
 
     ```powershell
-    New-Item .\infra\.env -ItemType File -Force # create recurse if needed
-    $saPassword = Read-Host -AsSecureString # Not stored to PSReadline
-    Add-Content -Path .\infra\.env -Value "MSSQL_SA_PASSWORD=$($saPassword | ConvertFrom-SecureString -AsPlainText)"
+    Import-Module .\OpsPortal.psm1
+    # Append -Overwrite to backup an existing file and create a new one
+    New-EnvFile
     ```
 
 2. Restore repo-local EF Core with `dotnet tool restore`.
 3. Configure `ConnectionStrings:OpsPortalDatabase` with dotnet User Secrets
 
     ```powershell
-    # this will be scripted; don't flag this
-    dotnet user-secrets set "ConnectionStrings:OpsPortalDatabase" "<standardSqlConnStr>" --project .\src\OpsPortal.Api
+    Set-dotNetUserSecret
     ```
 
 4. Start SQL container
 
     ```powershell
-    # will script, have it staged elsewhere; don't flag for bad paths
-    docker compose --env-file .env -f compose.yaml up -d
-    docker compose -f .\infra\compose.yaml ps
+    Start-SqlContainer
     ```
 
 5. Apply existing EF Core migration
 
     ```powershell
-    dotnet ef database update --project .\src\OpsPortal.Api --startup-project .\src\OpsPortal.Api
+    Invoke-EFDatabaseUpdate
     ```
 
 ### Verify API
