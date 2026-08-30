@@ -8,5 +8,5 @@ export async function getWorkItems(): Promise<WorkItem[]> {
     }
 
     const apiWorkItems: WorkItem[] = await response.json();
-    return apiWorkItems    
+    return apiWorkItems
 };
