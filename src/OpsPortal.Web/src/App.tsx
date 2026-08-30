@@ -1,16 +1,7 @@
 import { useEffect, useState } from "react";
-
-// string-literal union
-type WorkItemStatus = "Open" | "InProgress" | "Completed";
-
-// match to backend model
-type WorkItem = {
-  id: string;
-  title: string;
-  status: WorkItemStatus;
-  createdAtUtc: string;
-  updatedAtUtc: string;
-}
+import { type WorkItem } from "./models/WorkItem";
+import { getWorkItems } from "./api/workItemsApi";
+import { WorkItemsList } from "./components/WorkItemsList";
 
 function App() {
   const [workItems, setWorkItems] = useState<WorkItem[]>([])
@@ -22,16 +13,7 @@ function App() {
 
     async function loadWorkItems() {
       try {
-        // Fetch /api/work-items
-        const response = await fetch('/api/work-items')
-
-        // Check OK
-        if (!response.ok) { 
-          throw new Error(`status: ${response.status}`)
-        }
-
-        // Read JSON as WorkItem[]
-        const apiWorkItems: WorkItem[] = await response.json();
+        const apiWorkItems = await getWorkItems()
 
         if (!ignore) {
           setWorkItems(apiWorkItems)
@@ -68,13 +50,7 @@ function App() {
       ) : workItems.length === 0 ? (
         <p>No work items found.</p>
       ) : (
-        <ul>
-          {workItems.map((workItem) => (
-            <li key={workItem.id}>
-              {workItem.title} - {workItem.status}
-            </li>
-          ))}
-        </ul>
+        <WorkItemsList workItems={workItems} />
       )}
     </main>
   )
