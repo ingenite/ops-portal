@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { type WorkItem } from "./models/WorkItem";
-import { getWorkItems } from "./api/workItemsApi";
+import { getWorkItems, createWorkItem } from "./api/workItemsApi";
 import { WorkItemsList } from "./components/WorkItemsList";
+import { CreateWorkItemForm } from "./components/CreateWorkItemForm";
 
 function App() {
   const [workItems, setWorkItems] = useState<WorkItem[]>([])
@@ -40,6 +41,23 @@ function App() {
     }
   }, [])
 
+  async function handleCreateWorkItem(title: string) {
+    try {
+      const createdWorkItem = await createWorkItem({ title })
+
+      setWorkItems(currentWorkItems => [
+        createdWorkItem,
+        ...currentWorkItems
+      ])
+    } catch (error: unknown) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'An unknown error occurred'
+      )
+    }
+  }
+
   return (
     <main>
       <h1>Work Items</h1>
@@ -47,14 +65,21 @@ function App() {
         <p>Loading work items...</p>
       ) : errorMessage ? (
         <p role="alert">{errorMessage}</p>
-      ) : workItems.length === 0 ? (
-        <p>No work items found.</p>
       ) : (
-        <WorkItemsList workItems={workItems} />
+        <>
+          <section>
+            <h2>Create New Work Item</h2>
+            <CreateWorkItemForm onCreate={handleCreateWorkItem} />
+          </section>
+
+          {workItems.length === 0 ? (
+          <p>No work items found.</p>
+          ) : (
+          <WorkItemsList workItems={workItems} />
+          )}
+        </>
       )}
     </main>
   )
 }
-
-export default App
-
+  export default App

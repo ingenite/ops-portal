@@ -9,3 +9,7 @@ export type WorkItem = {
   createdAtUtc: string;
   updatedAtUtc: string;
 };
+
+export type CreateWorkItemRequest = {
+    title: string;
+};
