@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { type WorkItem } from "./models/WorkItem";
-import { getWorkItems, createWorkItem } from "./api/workItemsApi";
+import { getWorkItems, createWorkItem, deleteWorkItem } from "./api/workItemsApi";
 import { WorkItemsList } from "./components/WorkItemsList";
 import { CreateWorkItemForm } from "./components/CreateWorkItemForm";
 
@@ -50,6 +50,13 @@ function App() {
     ])
   }
 
+  async function handleDeleteWorkItem(id: string) {
+    await deleteWorkItem(id)
+
+    setWorkItems(currentWorkItems =>
+      currentWorkItems.filter(workItem => workItem.id !== id)
+    )
+  }
   return (
     <main>
       <h1>Work Items</h1>
@@ -67,7 +74,10 @@ function App() {
           {workItems.length === 0 ? (
           <p>No work items found.</p>
           ) : (
-          <WorkItemsList workItems={workItems} />
+          <WorkItemsList
+            workItems={workItems}
+            onDelete={handleDeleteWorkItem}
+          />
           )}
         </>
       )}

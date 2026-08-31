@@ -10,4 +10,6 @@ public interface IWorkItemStore {
     Task<WorkItem> CreateAsync(string title);
 
     Task<WorkItem?> UpdateAsync(Guid id, string? title, string? status);
+
+    Task<bool> DeleteAsync(Guid id);
 }

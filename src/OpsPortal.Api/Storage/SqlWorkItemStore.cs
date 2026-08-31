@@ -24,7 +24,7 @@ public sealed class SqlWorkItemStore : IWorkItemStore {
 
         _dbContext.WorkItems.Add(workItem);
         await _dbContext.SaveChangesAsync();
-        
+
         return workItem;
     }
 
@@ -62,5 +62,19 @@ public sealed class SqlWorkItemStore : IWorkItemStore {
         await _dbContext.SaveChangesAsync();
 
         return workItem;
+    }
+
+    public async Task<bool> DeleteAsync(Guid id) {
+        var workItem = await _dbContext.WorkItems.FindAsync(id);
+
+        if (workItem is null) {
+            return false;
+        }
+
+        _dbContext.WorkItems.Remove(workItem);
+
+        await _dbContext.SaveChangesAsync();
+
+        return true;
     }
 }

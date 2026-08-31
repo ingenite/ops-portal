@@ -27,3 +27,13 @@ export async function createWorkItem(request: CreateWorkItemRequest): Promise<Wo
     const created: WorkItem = await response.json();
     return created
 }
+
+export async function deleteWorkItem(id: string): Promise<void> {
+    const response = await fetch(`/api/work-items/${id}`, {
+        method: "DELETE"
+    })
+
+    if (!response.ok) {
+        throw new Error(`Could not delete item: ${response.status}`)
+    }
+}

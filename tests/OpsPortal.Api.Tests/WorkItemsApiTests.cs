@@ -212,4 +212,50 @@ public sealed class WorkItemsApiTests {
         // Assert - HTTP/404 Not Found
         Assert.Equal(HttpStatusCode.NotFound, patchResponse.StatusCode);
     }
+    [Fact]
+    public async Task Create_work_item_then_Delete_then_getById_returns_not_found() {
+        // Arrange
+        using var factory = new OpsPortalApiFactory();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+            BaseAddress = new Uri("https://localhost")
+        });
+
+        var title = $"Integration test item {Guid.NewGuid():N}";
+
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/work-items",
+            new { title });
+
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+
+        var created = await createResponse.Content.ReadFromJsonAsync<WorkItem>();
+
+        Assert.NotNull(created);
+
+        // Act
+        var deleteResponse = await client.DeleteAsync(
+            $"/api/work-items/{created.Id}");
+
+        // Assert - Delete - HTTP/204 No Content
+        Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+
+        // Get with same id - HTTP/404 Not Found
+        var getResponse = await client.GetAsync($"/api/work-items/{created.Id}");
+
+        Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
+    }
+    [Fact]
+    public async Task Delete_returns_not_found_when_the_work_item_does_not_exist() {
+        // Arrange
+        using var factory = new OpsPortalApiFactory();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+            BaseAddress = new Uri("https://localhost")
+        });
+
+        // Act
+        var deleteResponse = await client.DeleteAsync($"/api/work-items/{Guid.NewGuid():N}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, deleteResponse.StatusCode);
+    }
 }

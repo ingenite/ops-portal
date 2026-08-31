@@ -87,3 +87,14 @@ Responses:
 - `200 OK` with the updated work item.
 - `400 Bad Request` when no supported fields are provided or a supplied value fails validation.
 - `404 Not Found` when no work item exists with that ID.
+
+### Delete a work item
+
+```text
+DELETE /api/work-items/{id}
+```
+
+Responses:
+
+- `204 No Content` when the work item existed and was deleted.
+- `404 Not Found` when no work item exists with that ID.

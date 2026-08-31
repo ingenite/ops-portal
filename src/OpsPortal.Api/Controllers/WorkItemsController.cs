@@ -55,4 +55,11 @@ public sealed class WorkItemsController : ControllerBase {
             ? NotFound()
             : Ok(workItem);
     }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id) {
+        return await _workItemStore.DeleteAsync(id)
+            ? NoContent()
+            : NotFound();
+    }
 }

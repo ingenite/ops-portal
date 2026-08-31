@@ -68,4 +68,10 @@ public sealed class InMemoryWorkItemStore : IWorkItemStore {
             return Task.FromResult<WorkItem?>(workItem);
         }
     }
+
+    public Task<bool> DeleteAsync(Guid id) {
+        lock (_syncRoot) {
+            return Task.FromResult(_workItems.Remove(id));
+        }
+    }
 }
