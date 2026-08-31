@@ -42,20 +42,12 @@ function App() {
   }, [])
 
   async function handleCreateWorkItem(title: string) {
-    try {
-      const createdWorkItem = await createWorkItem({ title })
+    const createdWorkItem = await createWorkItem({ title })
 
-      setWorkItems(currentWorkItems => [
-        createdWorkItem,
-        ...currentWorkItems
-      ])
-    } catch (error: unknown) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : 'An unknown error occurred'
-      )
-    }
+    setWorkItems(currentWorkItems => [
+      createdWorkItem,
+      ...currentWorkItems
+    ])
   }
 
   return (
