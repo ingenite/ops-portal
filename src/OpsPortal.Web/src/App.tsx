@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { type WorkItem } from "./models/WorkItem";
-import { getWorkItems, createWorkItem, deleteWorkItem } from "./api/workItemsApi";
+import type {  WorkItem, WorkItemStatus } from "./models/WorkItem";
+import { getWorkItems, createWorkItem, deleteWorkItem, updateWorkItem } from "./api/workItemsApi";
 import { WorkItemsList } from "./components/WorkItemsList";
 import { CreateWorkItemForm } from "./components/CreateWorkItemForm";
 
@@ -57,6 +57,22 @@ function App() {
       currentWorkItems.filter(workItem => workItem.id !== id)
     )
   }
+
+  async function handleStatusChange(
+    id: string,
+    status: WorkItemStatus
+  ) {
+    const updatedWorkItem = await updateWorkItem(id, { status} )
+
+    setWorkItems(currentWorkItems =>
+      currentWorkItems.map(workItem =>
+        workItem.id === updatedWorkItem.id
+          ? updatedWorkItem
+          : workItem
+      )
+    )
+  }
+
   return (
     <main>
       <h1>Work Items</h1>
@@ -77,6 +93,7 @@ function App() {
           <WorkItemsList
             workItems={workItems}
             onDelete={handleDeleteWorkItem}
+            onStatusChange={handleStatusChange}
           />
           )}
         </>

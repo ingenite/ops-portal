@@ -1,5 +1,5 @@
 // string-literal union
-type WorkItemStatus = "Open" | "InProgress" | "Completed";
+export type WorkItemStatus = "Open" | "InProgress" | "Completed";
 
 // match to backend model
 export type WorkItem = {
@@ -13,3 +13,7 @@ export type WorkItem = {
 export type CreateWorkItemRequest = {
     title: string;
 };
+
+export type UpdateWorkItemStatusRequest = {
+  status: WorkItemStatus;
+}

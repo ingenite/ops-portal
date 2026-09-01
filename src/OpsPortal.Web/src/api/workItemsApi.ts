@@ -1,4 +1,7 @@
-import type { WorkItem, CreateWorkItemRequest } from "../models/WorkItem";
+import type { WorkItem,
+            CreateWorkItemRequest,
+            UpdateWorkItemStatusRequest
+        } from "../models/WorkItem";
 
 export async function getWorkItems(): Promise<WorkItem[]> {
     const response = await fetch('/api/work-items')
@@ -36,4 +39,24 @@ export async function deleteWorkItem(id: string): Promise<void> {
     if (!response.ok) {
         throw new Error(`Could not delete item: ${response.status}`)
     }
+}
+
+export async function updateWorkItem(
+    id: string,
+    request: UpdateWorkItemStatusRequest
+): Promise<WorkItem> {
+    const response = await fetch(`/api/work-items/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(request),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    })
+
+    if (!response.ok) {
+        throw new Error(`Failed to update WorkItem: ${response.status}`)
+    }
+
+    const updated: WorkItem = await response.json();
+    return updated
 }
