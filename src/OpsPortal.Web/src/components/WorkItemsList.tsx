@@ -3,7 +3,7 @@ import type { WorkItem } from "../models/WorkItem";
 
 type WorkItemsListProps = {
     workItems: WorkItem[];
-    onDelete: (id: string) => Promise<void>;
+    onDelete: (id: string) => Promise<void>
 }
 
 export function WorkItemsList({
@@ -35,24 +35,43 @@ export function WorkItemsList({
             {errorMessage && (
                 <p role="alert">{errorMessage}</p>
             )}
+            <table>
+                <caption>Work Items</caption>
 
-            <ul>
-                {workItems.map((workItem) => (
-                    <li key={workItem.id}>
-                        {workItem.title} - {workItem.status}
+                <thead>
+                    <tr>
+                        <th scope="col">Title</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Actions</th>
+                    </tr>
 
-                        <button
-                            type="button"
-                            onClick={() => void handleDelete(workItem.id)}
-                            disabled={deletingId !== null}
-                        >
-                            {deletingId === workItem.id
-                                ? "Deleting..."
-                                : "Delete"}
-                        </button>
-                    </li>
-                ))}
-            </ul>
+                </thead>
+
+                <tbody>
+                    {workItems.map((workItem) => (
+                        <tr key={workItem.id}>
+                            <td>{workItem.title}</td>
+                            <td>{workItem.status}</td>
+                            <td>
+                                <button
+                                    type="button"
+                                    onClick={() => void handleDelete(workItem.id)}
+                                    disabled={deletingId !== null}
+                                    aria-label={
+                                        deletingId === workItem.id
+                                            ? `Deleting ${workItem.title}`
+                                            : `Delete ${workItem.title}`
+                                    }
+                                >
+                                    {deletingId === workItem.id
+                                        ? `Deleting...`
+                                        : `Delete`}
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </>
     )
 }
