@@ -38,4 +38,22 @@ describe("CreateWorkItemForm", () => {
         expect(onCreate).toHaveBeenCalledTimes(1)
         expect(onCreate).toHaveBeenCalledWith("Review API contract")
     })
+
+    it("does not call onCreate when the submitted title contains only whitespace", async () => {
+        const user = userEvent.setup()
+        const onCreate = vi.fn().mockResolvedValue(undefined)
+
+        render(<CreateWorkItemForm onCreate={onCreate} />)
+
+        await user.type(
+            screen.getByRole("textbox", { name: "New WorkItem Title:" }),
+            "  "
+        )
+
+        await user.click(
+            screen.getByRole("button", { name: "Create" })
+        )
+
+        expect(onCreate).not.toHaveBeenCalled()
+    })
 })
