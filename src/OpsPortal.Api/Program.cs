@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OpsPortal.Api.Data;
+using OpsPortal.Api.Reporting;
 using OpsPortal.Api.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,12 +19,16 @@ builder.Services.AddDbContext<OpsPortalDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 builder.Services.AddScoped<IWorkItemStore, SqlWorkItemStore>();
+builder.Services.AddScoped<WorkItemReportQuery>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) {
     app.MapOpenApi();
+    app.UseSwaggerUI(options => {
+        options.SwaggerEndpoint("/openapi/v1.json", "OpsPortal API v1");
+    });
 }
 
 app.UseHttpsRedirection();

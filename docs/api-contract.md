@@ -98,3 +98,34 @@ Responses:
 
 - `204 No Content` when the work item existed and was deleted.
 - `404 Not Found` when no work item exists with that ID.
+
+## Reports
+
+### Work Items By Status, Count
+
+```text
+GET /api/reports/workItemStatus
+```
+
+Responses:
+
+- `200 OK` with JSON array with 1 row per status including zero counts.
+  - Ordered: Open, InProgress, Completed.
+  - Counts cover all currently stored work items. An empty database returns three zero-count rows.
+
+```json
+[
+  {
+    "status": "Open",
+    "count": 1
+  },
+  {
+    "status": "InProgress",
+    "count": 1
+  },
+  {
+    "status": "Completed",
+    "count": 1
+  }
+]
+```

@@ -3,11 +3,13 @@ import type {  WorkItem, WorkItemStatus } from "./models/WorkItem";
 import { getWorkItems, createWorkItem, deleteWorkItem, updateWorkItem } from "./api/workItemsApi";
 import { WorkItemsList } from "./components/WorkItemsList";
 import { CreateWorkItemForm } from "./components/CreateWorkItemForm";
+import { WorkItemsByStatusReportView } from "./components/WorkItemsByStatusReportView";
 
 function App() {
   const [workItems, setWorkItems] = useState<WorkItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [activeView, setActiveView] = useState<"workItems" | "reporting">("workItems")
 
   useEffect(() => {
     let ignore = false
@@ -75,30 +77,56 @@ function App() {
 
   return (
     <main>
-      <h1>Work Items</h1>
-      {isLoading ? (
-        <p>Loading work items...</p>
-      ) : errorMessage ? (
-        <p role="alert">{errorMessage}</p>
-      ) : (
-        <>
-          <section>
-            <h2>Create New Work Item</h2>
-            <CreateWorkItemForm onCreate={handleCreateWorkItem} />
-          </section>
+      <h1>OpsPortal</h1>
 
-          {workItems.length === 0 ? (
-          <p>No work items found.</p>
+      <nav aria-label="Main">
+        <button
+          type="button"
+          onClick={() => setActiveView("workItems")}
+          aria-pressed={activeView === "workItems"}
+        >
+          Work Items
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveView("reporting")}
+          aria-pressed={activeView === "reporting"}
+        >
+          Reporting
+        </button>
+      </nav>
+
+      {activeView === "workItems" ? (
+        <>
+          <h2>Work Items</h2>
+
+          {isLoading ? (
+            <p>Loading work items...</p>
+          ) : errorMessage ? (
+            <p role="alert">{errorMessage}</p>
           ) : (
-          <WorkItemsList
-            workItems={workItems}
-            onDelete={handleDeleteWorkItem}
-            onStatusChange={handleStatusChange}
-          />
+            <>
+              <section>
+                <h3>Create New Work Item</h3>
+                <CreateWorkItemForm onCreate={handleCreateWorkItem} />
+              </section>
+
+              {workItems.length === 0 ? (
+                <p>No work items found.</p>
+              ) : (
+                <WorkItemsList
+                  workItems={workItems}
+                  onDelete={handleDeleteWorkItem}
+                  onStatusChange={handleStatusChange}
+              />
+              )}
+            </>
           )}
         </>
+      ) : (
+        <WorkItemsByStatusReportView />
       )}
     </main>
   )
 }
-  export default App
+export default App
