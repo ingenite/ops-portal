@@ -73,7 +73,9 @@ Invoke-RestMethod http://localhost:5096/api/reports/workItemStatus
 - **Frontend:** React and TypeScript single-page application
 - **Backend:** ASP.NET Core Web API
 - **Database:** SQL Server running locally in Docker
-- **External services:** Mocked SaaS-style REST API initially; designed to be replaceable with real integrations
+- **External services:** Personal development environments with fake data, plus local fakes for repeatable failure and concurrency scenarios
+- **Background processing (planned):** Synchronization and queued external updates with visible operation status
+- **Identity (planned):** OIDC sign-in and API-enforced authorization before external write-back
 - **Tests:** Frontend unit tests and backend API/unit tests
 
 ## Implemented features
@@ -88,12 +90,15 @@ Invoke-RestMethod http://localhost:5096/api/reports/workItemStatus
 
 ## Planned features
 
-- Summary cards and simple charts.
-- Navigation that scales to multiple reports.
-- An external API integration page.
+The next chapters focus on external integration, background synchronization,
+authentication and authorization, and coordinated write-back. See the
+[learning roadmap](docs/roadmap.md) for the sequence, learning objectives, and
+open design choices.
+
+Summary cards, charts, navigation for multiple reports, and CSS/UI-framework
+work remain later topics.
 
 ## Non-goals
 
 - This is not an operational EUC tool.
 - This project will not connect to employer systems, data, or credentials.
-- Authentication and authorization are deferred until the core application shape is established.
