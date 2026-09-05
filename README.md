@@ -2,6 +2,8 @@
 
 A personal learning project that models the architecture and delivery practices of a modern internal web application.
 
+The project reinforces learning from technical books through practical implementation. It also develops the knowledge needed to direct AI-assisted development: understand proposed solutions, assess architectural choices, review generated code, and verify behavior across the application.
+
 ## Local Development
 
 ### Pre-Reqs
@@ -43,7 +45,17 @@ A personal learning project that models the architecture and delivery practices 
 
 ### Verify API
 
-> Coming soon - Powershell script using Invoke-RestMethod
+With the API running locally, open Swagger UI at:
+
+http://localhost:5096/swagger
+
+Swagger UI is available in the Development environment. It displays the generated OpenAPI contract and supports executing requests against the running API.
+
+The status-count report can also be checked from PowerShell:
+
+```powershell
+Invoke-RestMethod http://localhost:5096/api/reports/workItemStatus
+```
 
 ### Build and Test
 
@@ -64,12 +76,21 @@ A personal learning project that models the architecture and delivery practices 
 - **External services:** Mocked SaaS-style REST API initially; designed to be replaceable with real integrations
 - **Tests:** Frontend unit tests and backend API/unit tests
 
-## Initial features
+## Implemented features
 
-1. An API integration page that demonstrates reading and creating or updating data.
-2. A reporting page that displays database-backed results in a table.
-3. Summary cards and simple charts.
-4. Report navigation that scales to multiple reports.
+- Work Items API and React interface for listing, creating, deleting, and updating work item status.
+- SQL Server persistence through Entity Framework Core.
+- Database-backed status-count report displayed in a semantic table.
+- Navigation between Work Items and Reporting. Opening Reporting fetches current counts.
+- Loading and error handling for frontend data requests.
+- Interactive API documentation through Swagger UI.
+- Backend API tests and frontend component tests, including report loading and display of zero counts.
+
+## Planned features
+
+- Summary cards and simple charts.
+- Navigation that scales to multiple reports.
+- An external API integration page.
 
 ## Non-goals
 
