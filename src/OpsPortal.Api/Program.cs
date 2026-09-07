@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OpsPortal.Api.Data;
+using OpsPortal.Api.Integrations.Atlassian;
 using OpsPortal.Api.Reporting;
 using OpsPortal.Api.Storage;
 
@@ -20,6 +21,23 @@ builder.Services.AddDbContext<OpsPortalDbContext>(options =>
 
 builder.Services.AddScoped<IWorkItemStore, SqlWorkItemStore>();
 builder.Services.AddScoped<WorkItemReportQuery>();
+
+// Integrations.Atlassian
+builder.Services.AddOptions<AtlassianOptions>()
+        .Bind(builder.Configuration.GetSection("Atlassian"))
+    .Validate(options => {
+        return !string.IsNullOrWhiteSpace(options.CloudId);
+    }, "Atlassian:CloudId is required")
+    .Validate(options => {
+        return !string.IsNullOrWhiteSpace(options.WorkspaceId);
+    }, "Atlassian:WorkspaceId is required")
+    .Validate(options => {
+        return !string.IsNullOrWhiteSpace(options.Email);
+    }, "Atlassian:Email is required")
+    .Validate(options => {
+        return !string.IsNullOrWhiteSpace(options.ApiToken);
+    }, "Atlassian:ApiToken is required")
+    .ValidateOnStart();
 
 var app = builder.Build();
 
