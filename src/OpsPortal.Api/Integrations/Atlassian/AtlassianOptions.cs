@@ -7,7 +7,9 @@ public sealed class AtlassianOptions {
 
     public string WorkspaceId { get; set; } = string.Empty;
 
-    public string Email { get; set; } = string.Empty;
+    public string AccessToken { get; set; } = string.Empty;
 
-    public string ApiToken { get; set; } = string.Empty;
+    public string ApplicationsAqlQuery { get; set; } = string.Empty;
+
+    public int ApplicationsMaxResults { get; set; } = 25;
 }

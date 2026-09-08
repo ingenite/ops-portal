@@ -1,3 +1,5 @@
+using System.Net.Http.Headers;
+using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using OpsPortal.Api.Data;
 using OpsPortal.Api.Integrations.Atlassian;
@@ -24,20 +26,31 @@ builder.Services.AddScoped<WorkItemReportQuery>();
 
 // Integrations.Atlassian
 builder.Services.AddOptions<AtlassianOptions>()
-        .Bind(builder.Configuration.GetSection("Atlassian"))
-    .Validate(options => {
-        return !string.IsNullOrWhiteSpace(options.CloudId);
-    }, "Atlassian:CloudId is required")
-    .Validate(options => {
-        return !string.IsNullOrWhiteSpace(options.WorkspaceId);
-    }, "Atlassian:WorkspaceId is required")
-    .Validate(options => {
-        return !string.IsNullOrWhiteSpace(options.Email);
-    }, "Atlassian:Email is required")
-    .Validate(options => {
-        return !string.IsNullOrWhiteSpace(options.ApiToken);
-    }, "Atlassian:ApiToken is required")
+    .Bind(builder.Configuration.GetSection("Atlassian"))
+    .Validate(options => !string.IsNullOrWhiteSpace(options.CloudId),
+        "Atlassian:CloudId is required")
+    .Validate(options => !string.IsNullOrWhiteSpace(options.WorkspaceId),
+        "Atlassian:WorkspaceId is required")
+    .Validate(options => !string.IsNullOrWhiteSpace(options.AccessToken),
+        "Atlassian:AccessToken is required")
+    .Validate(options => !string.IsNullOrWhiteSpace(options.ApplicationsAqlQuery),
+        "Atlassian:ApplicationsAqlQuery is required")
+    .Validate(options => options.ApplicationsMaxResults > 0,
+        "Atlassian:ApplicationsMaxResults must be greater than zero")
     .ValidateOnStart();
+
+builder.Services.AddHttpClient<IAtlassianAssetsClient, AtlassianAssetsClient>(
+    (services, client) => {
+        var options = services
+            .GetRequiredService<IOptions<AtlassianOptions>>()
+            .Value;
+
+        client.BaseAddress = new Uri("https://api.atlassian.com/");
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", options.AccessToken);
+        client.DefaultRequestHeaders.Accept.Add(
+            new MediaTypeWithQualityHeaderValue("application/json"));
+    });
 
 var app = builder.Build();
 
