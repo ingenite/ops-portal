@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using OpsPortal.Api.Data;
@@ -31,8 +32,10 @@ builder.Services.AddOptions<AtlassianOptions>()
         "Atlassian:CloudId is required")
     .Validate(options => !string.IsNullOrWhiteSpace(options.WorkspaceId),
         "Atlassian:WorkspaceId is required")
-    .Validate(options => !string.IsNullOrWhiteSpace(options.AccessToken),
-        "Atlassian:AccessToken is required")
+    .Validate(options => !string.IsNullOrWhiteSpace(options.Email),
+        "Atlassian:Email is required")
+    .Validate(options => !string.IsNullOrWhiteSpace(options.ApiToken),
+        "Atlassian:ApiToken is required")
     .Validate(options => !string.IsNullOrWhiteSpace(options.ApplicationsAqlQuery),
         "Atlassian:ApplicationsAqlQuery is required")
     .Validate(options => options.ApplicationsMaxResults > 0,
@@ -46,8 +49,12 @@ builder.Services.AddHttpClient<IAtlassianAssetsClient, AtlassianAssetsClient>(
             .Value;
 
         client.BaseAddress = new Uri("https://api.atlassian.com/");
+        var credentials = Convert.ToBase64String(
+            Encoding.UTF8.GetBytes($"{options.Email}:{options.ApiToken}"));
+
         client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", options.AccessToken);
+            new AuthenticationHeaderValue("Basic", credentials);
+
         client.DefaultRequestHeaders.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/json"));
     });

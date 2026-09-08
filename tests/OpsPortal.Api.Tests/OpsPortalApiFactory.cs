@@ -17,7 +17,8 @@ public sealed class OpsPortalApiFactory : WebApplicationFactory<Program> {
                         "Server=unused;Database=unused;User Id=unused;Password=unused",
                     ["Atlassian:CloudId"] = "test-cloud-id",
                     ["Atlassian:WorkspaceId"] = "test-cloud-id",
-                    ["Atlassian:AccessToken"] = "not-a-real-token",
+                    ["Atlassian:Email"] = "test@example.com",
+                    ["Atlassian:ApiToken"] = "not-a-real-token",
                     ["Atlassian:ApplicationsAqlQuery"] = "objectType = Application",
                     ["Atlassian:ApplicationsMaxResults"] = "25"
                 });
