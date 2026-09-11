@@ -1,14 +1,77 @@
 using System.Net;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using OpsPortal.Api.Integrations.Atlassian;
+using OpsPortal.Api.Data;
 
 namespace OpsPortal.Api.Tests;
 
 public sealed class ApplicationsApiTests {
+    [Fact]
+    public async Task Sync_returns_no_content_after_persisting_applications() {
+        using var database = new SyncTestDatabase();
+        using var factory = new OpsPortalApiFactory();
+        using var applicationFactory = factory.WithWebHostBuilder(builder => {
+            builder.ConfigureTestServices(services => {
+                services.RemoveAll<OpsPortalDbContext>();
+                services.AddScoped<OpsPortalDbContext>(_ => database.CreateContext());
+                services.RemoveAll<IAtlassianAssetsClient>();
+                services.AddSingleton<IAtlassianAssetsClient>(new FakeAtlassianAssetsClient(
+                    new AtlassianAssetsQueryResponse {
+                        Values = [new() { Id = "22", ObjectKey = "APM-22", Label = "Demo CRM" }]
+                    }));
+            });
+        });
+        using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions {
+            BaseAddress = new Uri("https://localhost")
+        });
+
+        using var response = await client.PostAsync("/api/applications/sync", null);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Empty(await response.Content.ReadAsStringAsync());
+        using var verification = database.CreateContext();
+        var row = Assert.Single(await verification.Applications.ToListAsync());
+        Assert.Equal("22", row.ObjectId);
+        Assert.Equal("Demo CRM", row.Name);
+    }
+
+    [Fact]
+    public async Task Sync_returns_bad_gateway_without_exposing_provider_diagnostics() {
+        const string providerError = "Private fake provider diagnostic";
+        using var database = new SyncTestDatabase();
+        using var factory = new OpsPortalApiFactory();
+        using var applicationFactory = factory.WithWebHostBuilder(builder => {
+            builder.ConfigureTestServices(services => {
+                services.RemoveAll<OpsPortalDbContext>();
+                services.AddScoped<OpsPortalDbContext>(_ => database.CreateContext());
+                services.RemoveAll<IAtlassianAssetsClient>();
+                services.AddSingleton<IAtlassianAssetsClient>(new FailingAtlassianAssetsClient(providerError));
+            });
+        });
+        using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions {
+            BaseAddress = new Uri("https://localhost")
+        });
+
+        using var response = await client.PostAsync("/api/applications/sync", null);
+
+        Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        var body = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(body);
+        Assert.Equal(502, document.RootElement.GetProperty("status").GetInt32());
+        Assert.Equal("Problem contacting external provider", document.RootElement.GetProperty("title").GetString());
+        Assert.Equal("Unable to synchronize applications from the provider API.",
+            document.RootElement.GetProperty("detail").GetString());
+        Assert.DoesNotContain(providerError, body);
+        using var verification = database.CreateContext();
+        Assert.Empty(await verification.Applications.ToListAsync());
+    }
+
     [Fact]
     public async Task GetAll_returns_mapped_application_rows() {
         // Arrange

@@ -6,6 +6,7 @@ using OpsPortal.Api.Data;
 using OpsPortal.Api.Integrations.Atlassian;
 using OpsPortal.Api.Reporting;
 using OpsPortal.Api.Storage;
+using OpsPortal.Api.Synchronization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,7 @@ builder.Services.AddDbContext<OpsPortalDbContext>(options =>
 
 builder.Services.AddScoped<IWorkItemStore, SqlWorkItemStore>();
 builder.Services.AddScoped<WorkItemReportQuery>();
+builder.Services.AddScoped<ApplicationSyncService>();
 
 // Integrations.Atlassian
 builder.Services.AddOptions<AtlassianOptions>()
