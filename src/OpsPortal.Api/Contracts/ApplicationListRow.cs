@@ -12,4 +12,6 @@ public sealed class ApplicationListRow {
     public string? DeploymentMethod { get; set; }
 
     public string? Status { get; set; }
+
+    public DateTimeOffset LastSyncedAtUtc { get; set; }
 }

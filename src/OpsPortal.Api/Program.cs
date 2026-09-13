@@ -26,6 +26,7 @@ builder.Services.AddDbContext<OpsPortalDbContext>(options =>
 builder.Services.AddScoped<IWorkItemStore, SqlWorkItemStore>();
 builder.Services.AddScoped<WorkItemReportQuery>();
 builder.Services.AddScoped<ApplicationSyncService>();
+builder.Services.AddScoped<ApplicationQuery>();
 
 // Integrations.Atlassian
 builder.Services.AddOptions<AtlassianOptions>()

@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+
 using OpsPortal.Api.Contracts;
+using OpsPortal.Api.Data;
 using OpsPortal.Api.Integrations.Atlassian;
 using OpsPortal.Api.Synchronization;
 
@@ -8,33 +11,26 @@ namespace OpsPortal.Api.Controllers;
 [ApiController]
 [Route("api/applications")]
 public sealed class ApplicationsController : ControllerBase {
-    private readonly IAtlassianAssetsClient _assetsClient;
+    private readonly ApplicationQuery _applicationQuery;
     private readonly ApplicationSyncService _applicationSyncService;
+    private readonly IOptions<AtlassianOptions> _options;
 
-    public ApplicationsController(IAtlassianAssetsClient assetsClient,
-        ApplicationSyncService applicationSyncService) {
-        _assetsClient = assetsClient;
+    public ApplicationsController(ApplicationQuery applicationQuery,
+        ApplicationSyncService applicationSyncService,
+        IOptions<AtlassianOptions> options) {
+        _applicationQuery = applicationQuery;
         _applicationSyncService = applicationSyncService;
+        _options = options;
     }
 
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<ApplicationListRow>>> GetAll(
         CancellationToken cancellationToken) {
-        try {
-            var response = await _assetsClient.GetApplicationsAsync(cancellationToken);
+        var applications = await _applicationQuery.GetAllAsync(
+            _options.Value.WorkspaceId,
+            cancellationToken);
 
-            var applications = response.Values
-                .Select(AtlassianApplicationMapper.Map)
-                .ToList();
-
-            return Ok(applications);
-        } catch (HttpRequestException) {
-            return Problem(
-                statusCode: StatusCodes.Status502BadGateway,
-                title: "Problem contacting external provider",
-                detail: "Unable to retrieve Applications from provider API"
-            );
-        }
+        return Ok(applications);
     }
 
     [HttpPost("sync")]

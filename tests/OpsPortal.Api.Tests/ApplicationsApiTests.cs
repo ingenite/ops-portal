@@ -73,41 +73,26 @@ public sealed class ApplicationsApiTests {
     }
 
     [Fact]
-    public async Task GetAll_returns_mapped_application_rows() {
-        // Arrange
-        var providerResponse = new AtlassianAssetsQueryResponse {
-            Values = [
-                new AtlassianAssetObject {
-                    Id = "22",
-                    ObjectKey = "APM-22",
-                    Label = "Demo CRM",
-                    Attributes = [
-                        new AtlassianAssetAttribute {
-                            ObjectTypeAttributeId = "594",
-                            ObjectAttributeValues = [new() { DisplayValue = "Cloud" }]
-                        },
-                        new AtlassianAssetAttribute {
-                            ObjectTypeAttributeId = "597",
-                            ObjectAttributeValues = [new() { DisplayValue = "Test" }]
-                        }
-                    ]
-                }
-            ]
-        };
-
+    public async Task GetAll_returns_stored_rows_for_configured_workspace_with_freshness() {
+        using var database = new SyncTestDatabase();
+        var stored = StoredApplication("22", "Demo CRM");
+        using (var context = database.CreateContext()) {
+            var other = StoredApplication("22", "Other workspace CRM");
+            other.WorkspaceId = "other-workspace";
+            context.Applications.AddRange(stored, other);
+            await context.SaveChangesAsync();
+        }
         using var factory = new OpsPortalApiFactory();
-        using var applicationFactory = WithProviderResponse(factory, providerResponse);
+        using var applicationFactory = WithDatabase(factory, database,
+            new FakeAtlassianAssetsClient(new AtlassianAssetsQueryResponse()));
         using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
 
-        // Act
         using var response = await client.GetAsync("/api/applications");
 
-        // Assert - inspect the public JSON contract, including property names.
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
-
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         var row = Assert.Single(document.RootElement.EnumerateArray());
         Assert.Equal("22", row.GetProperty("externalId").GetString());
@@ -115,64 +100,102 @@ public sealed class ApplicationsApiTests {
         Assert.Equal("Demo CRM", row.GetProperty("name").GetString());
         Assert.Equal("Cloud", row.GetProperty("deploymentMethod").GetString());
         Assert.Equal("Test", row.GetProperty("status").GetString());
-        Assert.Equal(5, row.EnumerateObject().Count());
+        Assert.Equal(stored.LastSyncedAtUtc, row.GetProperty("lastSyncedAtUtc").GetDateTimeOffset());
+        Assert.Equal(6, row.EnumerateObject().Count());
     }
 
     [Fact]
-    public async Task GetAll_returns_ok_with_an_empty_array_when_provider_has_no_assets() {
-        // Arrange
+    public async Task GetAll_returns_empty_array_when_database_is_empty_even_if_provider_has_assets() {
+        using var database = new SyncTestDatabase();
         using var factory = new OpsPortalApiFactory();
-        using var applicationFactory = WithProviderResponse(factory, new AtlassianAssetsQueryResponse());
+        using var applicationFactory = WithDatabase(factory, database,
+            new FakeAtlassianAssetsClient(new AtlassianAssetsQueryResponse {
+                Values = [new() { Id = "22", ObjectKey = "APM-22", Label = "Provider-only CRM" }]
+            }));
         using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
 
-        // Act
         using var response = await client.GetAsync("/api/applications");
 
-        // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
-
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         Assert.Equal(JsonValueKind.Array, document.RootElement.ValueKind);
         Assert.Empty(document.RootElement.EnumerateArray());
     }
 
     [Fact]
-    public async Task GetAll_returns_bad_gateway_problem_without_provider_error_details() {
-        // Arrange
-        const string providerError = "Fake provider diagnostic that must remain private";
+    public async Task GetAll_returns_stored_rows_without_calling_failing_provider() {
+        using var database = new SyncTestDatabase();
+        var stored = StoredApplication("22", "Stored CRM");
+        using (var context = database.CreateContext()) {
+            context.Applications.Add(stored);
+            await context.SaveChangesAsync();
+        }
+        var provider = new FailingAtlassianAssetsClient("Private fake provider diagnostic");
         using var factory = new OpsPortalApiFactory();
-        using var applicationFactory = factory.WithWebHostBuilder(builder => {
-            builder.ConfigureTestServices(services => {
-                services.RemoveAll<IAtlassianAssetsClient>();
-                services.AddSingleton<IAtlassianAssetsClient>(
-                    new FailingAtlassianAssetsClient(providerError));
-            });
-        });
+        using var applicationFactory = WithDatabase(factory, database, provider);
         using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
 
-        // Act
         using var response = await client.GetAsync("/api/applications");
 
-        // Assert - the provider's 403 becomes our 502 with a generic problem body.
-        Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
-        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
-
-        var body = await response.Content.ReadAsStringAsync();
-        using var document = JsonDocument.Parse(body);
-        var problem = document.RootElement;
-        Assert.Equal(502, problem.GetProperty("status").GetInt32());
-        Assert.Equal("Problem contacting external provider", problem.GetProperty("title").GetString());
-        Assert.Equal("Unable to retrieve Applications from provider API", problem.GetProperty("detail").GetString());
-        Assert.DoesNotContain(providerError, body);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var row = Assert.Single(document.RootElement.EnumerateArray());
+        Assert.Equal("22", row.GetProperty("externalId").GetString());
+        Assert.Equal("Stored CRM", row.GetProperty("name").GetString());
+        Assert.Equal(stored.LastSyncedAtUtc, row.GetProperty("lastSyncedAtUtc").GetDateTimeOffset());
+        Assert.Equal(0, provider.CallCount);
     }
 
+    [Fact]
+    public async Task GetAll_orders_by_name_then_object_id_and_preserves_null_fields() {
+        using var database = new SyncTestDatabase();
+        var nullableApplication = StoredApplication("20", "Alpha");
+        nullableApplication.DeploymentMethod = null;
+        nullableApplication.Status = null;
+        using (var context = database.CreateContext()) {
+            context.Applications.AddRange(
+                StoredApplication("10", "Zulu"),
+                StoredApplication("30", "Alpha"),
+                nullableApplication);
+            await context.SaveChangesAsync();
+        }
+        using var factory = new OpsPortalApiFactory();
+        using var applicationFactory = WithDatabase(factory, database,
+            new FakeAtlassianAssetsClient(new AtlassianAssetsQueryResponse()));
+        using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions {
+            BaseAddress = new Uri("https://localhost")
+        });
+
+        using var response = await client.GetAsync("/api/applications");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var rows = document.RootElement.EnumerateArray().ToArray();
+        Assert.Equal(new[] { "20", "30", "10" },
+            rows.Select(row => row.GetProperty("externalId").GetString()));
+        Assert.Equal(JsonValueKind.Null, rows[0].GetProperty("deploymentMethod").ValueKind);
+        Assert.Equal(JsonValueKind.Null, rows[0].GetProperty("status").ValueKind);
+    }
+
+    private static OpsPortal.Api.Models.Application StoredApplication(
+        string objectId, string name) => new() {
+            Id = Guid.NewGuid(),
+            WorkspaceId = "test-cloud-id",
+            ObjectId = objectId,
+            Key = $"APM-{objectId}",
+            Name = name,
+            DeploymentMethod = "Cloud",
+            Status = "Test",
+            LastSyncedAtUtc = new DateTimeOffset(2020, 1, 2, 3, 4, 5, TimeSpan.Zero)
+        };
     private sealed class FailingAtlassianAssetsClient : IAtlassianAssetsClient {
         private readonly string _message;
+        public int CallCount { get; private set; }
 
         public FailingAtlassianAssetsClient(string message) {
             _message = message;
@@ -180,22 +203,25 @@ public sealed class ApplicationsApiTests {
 
         public Task<AtlassianAssetsQueryResponse> GetApplicationsAsync(
             CancellationToken cancellationToken) {
+            CallCount++;
             return Task.FromException<AtlassianAssetsQueryResponse>(
                 new HttpRequestException(_message, null, HttpStatusCode.Forbidden));
         }
     }
 
-    private static WebApplicationFactory<Program> WithProviderResponse(
+    private static WebApplicationFactory<Program> WithDatabase(
         OpsPortalApiFactory factory,
-        AtlassianAssetsQueryResponse response) {
+        SyncTestDatabase database,
+        IAtlassianAssetsClient provider) {
         return factory.WithWebHostBuilder(builder => {
             builder.ConfigureTestServices(services => {
+                services.RemoveAll<OpsPortalDbContext>();
+                services.AddScoped<OpsPortalDbContext>(_ => database.CreateContext());
                 services.RemoveAll<IAtlassianAssetsClient>();
-                services.AddSingleton<IAtlassianAssetsClient>(new FakeAtlassianAssetsClient(response));
+                services.AddSingleton<IAtlassianAssetsClient>(provider);
             });
         });
     }
-
     private sealed class FakeAtlassianAssetsClient : IAtlassianAssetsClient {
         private readonly AtlassianAssetsQueryResponse _response;
 
