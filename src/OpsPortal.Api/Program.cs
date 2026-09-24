@@ -62,6 +62,11 @@ builder.Services.AddHttpClient<IAtlassianAssetsClient, AtlassianAssetsClient>(
             new MediaTypeWithQualityHeaderValue("application/json"));
     });
 
+// Worker Service
+if (builder.Configuration.GetValue<bool>("ApplicationSync:Enabled")) {
+    builder.Services.AddHostedService<ApplicationSyncWorker>();
+}
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
