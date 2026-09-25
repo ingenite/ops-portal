@@ -28,6 +28,9 @@ builder.Services.AddScoped<WorkItemReportQuery>();
 builder.Services.AddScoped<ApplicationSyncService>();
 builder.Services.AddScoped<ApplicationQuery>();
 
+// Coordinate manual and background application sync
+builder.Services.AddSingleton<ApplicationSyncCoordinator>();
+
 // Integrations.Atlassian
 builder.Services.AddOptions<AtlassianOptions>()
     .Bind(builder.Configuration.GetSection("Atlassian"))
