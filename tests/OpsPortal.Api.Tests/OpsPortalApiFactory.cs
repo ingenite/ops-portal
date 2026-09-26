@@ -4,7 +4,10 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+
 using OpsPortal.Api.Storage;
+using OpsPortal.Api.Synchronization;
 
 namespace OpsPortal.Api.Tests;
 
@@ -20,13 +23,22 @@ public sealed class OpsPortalApiFactory : WebApplicationFactory<Program> {
                     ["Atlassian:Email"] = "test@example.com",
                     ["Atlassian:ApiToken"] = "not-a-real-token",
                     ["Atlassian:ApplicationsAqlQuery"] = "objectType = Application",
-                    ["Atlassian:ApplicationsMaxResults"] = "25"
+                    ["Atlassian:ApplicationsMaxResults"] = "25",
+                    ["ApplicationSync:Enabled"] = "false"
                 });
         });
 
         builder.ConfigureTestServices(services => {
             services.RemoveAll<IWorkItemStore>();
             services.AddSingleton<IWorkItemStore, InMemoryWorkItemStore>();
+
+            var worker = services.SingleOrDefault(service =>
+                service.ServiceType == typeof(IHostedService) &&
+                service.ImplementationType == typeof(ApplicationSyncWorker));
+
+            if (worker is not null) {
+                services.Remove(worker);
+            }
         });
     }
 }

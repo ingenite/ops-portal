@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using OpsPortal.Api.Integrations.Atlassian;
 using OpsPortal.Api.Data;
+using OpsPortal.Api.Synchronization;
 
 namespace OpsPortal.Api.Tests;
 
@@ -38,6 +39,33 @@ public sealed class ApplicationsApiTests {
         var row = Assert.Single(await verification.Applications.ToListAsync());
         Assert.Equal("22", row.ObjectId);
         Assert.Equal("Demo CRM", row.Name);
+    }
+
+    [Fact]
+    public async Task Manual_sync_returns_409_Conflict_while_the_gate_is_held() {
+        using var database = new SyncTestDatabase();
+        using var factory = new OpsPortalApiFactory();
+        var provider = new FailingAtlassianAssetsClient("Private fake provider diagnostic");
+        using var applicationFactory = factory.WithWebHostBuilder(builder => {
+            builder.ConfigureTestServices(services => {
+                services.RemoveAll<OpsPortalDbContext>();
+                services.AddScoped<OpsPortalDbContext>(_ => database.CreateContext());
+                services.RemoveAll<IAtlassianAssetsClient>();
+                services.AddSingleton<IAtlassianAssetsClient>(provider);
+            });
+        });
+        using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions {
+            BaseAddress = new Uri("https://localhost")
+        });
+
+        var coordinator = applicationFactory.Services.GetRequiredService<ApplicationSyncCoordinator>();
+        Assert.True(await coordinator.TryEnterAsync(CancellationToken.None));
+
+        using var response = await client.PostAsync("/api/applications/sync", null);
+        coordinator.Exit();
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal(0, provider.CallCount);
     }
 
     [Fact]
