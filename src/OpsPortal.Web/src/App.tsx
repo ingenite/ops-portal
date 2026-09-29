@@ -4,15 +4,20 @@ import { getWorkItems, createWorkItem, deleteWorkItem, updateWorkItem } from "./
 import { WorkItemsList } from "./components/WorkItemsList";
 import { CreateWorkItemForm } from "./components/CreateWorkItemForm";
 import { WorkItemsByStatusReportView } from "./components/WorkItemsByStatusReportView";
+import keycloak from "./auth/keycloak";
 
 function App() {
   const [workItems, setWorkItems] = useState<WorkItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [activeView, setActiveView] = useState<"workItems" | "reporting">("workItems")
+  const [signOutError, setSignOutError] = useState<string | null>(null)
+
+  const username = keycloak.tokenParsed?.preferred_username ?? 'Unknown user'
 
   useEffect(() => {
     let ignore = false
+
 
     async function loadWorkItems() {
       try {
@@ -75,9 +80,29 @@ function App() {
     )
   }
 
+    async function handleSignOut() {
+      setSignOutError(null)
+
+      try {
+        await keycloak.logout({
+          redirectUri: window.location.origin,
+        })
+      } catch {
+        setSignOutError('Unable to sign out. Please try again.')
+      }
+    }
+
   return (
     <main>
       <h1>OpsPortal</h1>
+
+      <p>Signed in as {username}</p>
+
+      <button type="button" onClick={handleSignOut}>
+        Sign out
+      </button>
+
+      {signOutError && <p role="alert">{signOutError}</p>}
 
       <nav aria-label="Main">
         <button
