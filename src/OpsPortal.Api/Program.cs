@@ -1,5 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using OpsPortal.Api.Data;
@@ -69,6 +71,15 @@ builder.Services.AddHttpClient<IAtlassianAssetsClient, AtlassianAssetsClient>(
 if (builder.Configuration.GetValue<bool>("ApplicationSync:Enabled")) {
     builder.Services.AddHostedService<ApplicationSyncWorker>();
 }
+
+// Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+.AddJwtBearer(jwtOptions =>
+{
+	jwtOptions.Authority = builder.Configuration.GetValue<string>("Api:Authority");
+	jwtOptions.Audience = builder.Configuration.GetValue<string>("Api:Audience");
+    if (builder.Environment.IsDevelopment()) jwtOptions.RequireHttpsMetadata = false;
+});
 
 var app = builder.Build();
 

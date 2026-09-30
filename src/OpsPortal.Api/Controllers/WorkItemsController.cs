@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.AspNetCore.Authorization;
 using OpsPortal.Api.Contracts;
 using OpsPortal.Api.Models;
 using OpsPortal.Api.Storage;
@@ -16,6 +16,7 @@ public sealed class WorkItemsController : ControllerBase {
     }
 
     [HttpGet]
+    [Authorize]
     public async Task<ActionResult<IReadOnlyCollection<WorkItem>>> GetAll() {
         return Ok(await _workItemStore.GetAllAsync());
     }
