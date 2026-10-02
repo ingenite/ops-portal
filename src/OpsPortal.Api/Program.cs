@@ -1,7 +1,6 @@
 using System.Net.Http.Headers;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using OpsPortal.Api.Data;
@@ -9,6 +8,8 @@ using OpsPortal.Api.Integrations.Atlassian;
 using OpsPortal.Api.Reporting;
 using OpsPortal.Api.Storage;
 using OpsPortal.Api.Synchronization;
+using System.Security.Claims;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -79,6 +80,35 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 	jwtOptions.Authority = builder.Configuration.GetValue<string>("Api:Authority");
 	jwtOptions.Audience = builder.Configuration.GetValue<string>("Api:Audience");
     if (builder.Environment.IsDevelopment()) jwtOptions.RequireHttpsMetadata = false;
+    jwtOptions.Events = new JwtBearerEvents {
+        OnTokenValidated = context => {
+            var identity = context.Principal?.Identity as ClaimsIdentity;
+            var realmAccess = context.Principal?.FindFirst("realm_access");
+
+            if (identity is null || realmAccess is null) return Task.CompletedTask;
+
+            using var document = JsonDocument.Parse(realmAccess.Value);
+
+            if (document.RootElement.TryGetProperty("roles", out var roles)) {
+                foreach (var role in roles.EnumerateArray()) {
+                    var roleName = role.GetString();
+
+                    if (!string.IsNullOrWhiteSpace(roleName)) {
+                        identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
+                    }
+                }
+            }
+
+            return Task.CompletedTask;
+        }
+    };
+});
+
+builder.Services.AddAuthorization(options => {
+    options.AddPolicy("CanRead", policy => {
+        policy.RequireAuthenticatedUser();
+        policy.RequireRole("Reader", "Admin");
+    });
 });
 
 var app = builder.Build();

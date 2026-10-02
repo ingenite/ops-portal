@@ -3,8 +3,17 @@ import type { WorkItem,
             UpdateWorkItemStatusRequest
         } from "../models/WorkItem";
 
+import keycloak from "../auth/keycloak";
+
 export async function getWorkItems(): Promise<WorkItem[]> {
-    const response = await fetch('/api/work-items')
+    await keycloak.updateToken();
+
+    const response = await fetch('/api/work-items', {
+        method: "GET",
+        headers: {
+            "authorization": `Bearer ${keycloak.token}`
+        }
+    })
 
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);

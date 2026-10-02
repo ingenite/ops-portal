@@ -16,7 +16,7 @@ public sealed class WorkItemsController : ControllerBase {
     }
 
     [HttpGet]
-    [Authorize]
+    [Authorize(Policy = "CanRead")]
     public async Task<ActionResult<IReadOnlyCollection<WorkItem>>> GetAll() {
         return Ok(await _workItemStore.GetAllAsync());
     }
