@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using OpsPortal.Api.Contracts;
 using OpsPortal.Api.Data;
@@ -26,6 +27,7 @@ public sealed class ApplicationsController : ControllerBase {
     }
 
     [HttpGet]
+    [Authorize(Policy = "CanRead")]
     public async Task<ActionResult<IReadOnlyList<ApplicationListRow>>> GetAll(
         CancellationToken cancellationToken) {
         var applications = await _applicationQuery.GetAllAsync(
@@ -36,6 +38,7 @@ public sealed class ApplicationsController : ControllerBase {
     }
 
     [HttpPost("sync")]
+    [Authorize(Policy = "CanWrite")]
     public async Task<IActionResult> SyncApplications(
         CancellationToken cancellationToken) {
 

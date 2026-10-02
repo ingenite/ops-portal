@@ -24,11 +24,14 @@ export async function getWorkItems(): Promise<WorkItem[]> {
 };
 
 export async function createWorkItem(request: CreateWorkItemRequest): Promise<WorkItem> {
+    await keycloak.updateToken();
+
     const response = await fetch("/api/work-items", {
         method: "POST",
         body: JSON.stringify(request),
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "authorization": `Bearer ${keycloak.token}`
         }
     })
     // Response.ok = true for 200-299
@@ -41,8 +44,13 @@ export async function createWorkItem(request: CreateWorkItemRequest): Promise<Wo
 }
 
 export async function deleteWorkItem(id: string): Promise<void> {
+    await keycloak.updateToken();
+
     const response = await fetch(`/api/work-items/${id}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: {
+            "authorization": `Bearer ${keycloak.token}`
+        }
     })
 
     if (!response.ok) {
@@ -54,11 +62,14 @@ export async function updateWorkItem(
     id: string,
     request: UpdateWorkItemStatusRequest
 ): Promise<WorkItem> {
+    await keycloak.updateToken();
+
     const response = await fetch(`/api/work-items/${id}`, {
         method: "PATCH",
         body: JSON.stringify(request),
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "authorization": `Bearer ${keycloak.token}`
         }
     })
 

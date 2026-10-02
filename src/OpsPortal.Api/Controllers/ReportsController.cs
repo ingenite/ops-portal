@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.AspNetCore.Authorization;
 using OpsPortal.Api.Contracts;
 using OpsPortal.Api.Reporting;
 
@@ -15,6 +15,7 @@ public sealed class ReportsController : ControllerBase {
     }
 
     [HttpGet("workItemStatus")]
+    [Authorize(Policy = "CanRead")]
     public async Task<ActionResult<IReadOnlyList<WorkItemsByStatusReportRow>>> GetStatusCounts() {
         return Ok(await _reportQuery.GetStatusCountsAsync());
     }

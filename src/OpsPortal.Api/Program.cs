@@ -109,6 +109,10 @@ builder.Services.AddAuthorization(options => {
         policy.RequireAuthenticatedUser();
         policy.RequireRole("Reader", "Admin");
     });
+    options.AddPolicy("CanWrite", policy => {
+       policy.RequireAuthenticatedUser();
+       policy.RequireRole("Admin");
+    });
 });
 
 var app = builder.Build();

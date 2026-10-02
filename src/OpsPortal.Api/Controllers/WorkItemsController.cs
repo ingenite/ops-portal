@@ -22,6 +22,7 @@ public sealed class WorkItemsController : ControllerBase {
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize(Policy = "CanRead")]
     public async Task<ActionResult<WorkItem>> GetById(Guid id) {
         var workItem = await _workItemStore.GetByIdAsync(id);
 
@@ -31,6 +32,7 @@ public sealed class WorkItemsController : ControllerBase {
     }
 
     [HttpPost]
+    [Authorize(Policy = "CanWrite")]
     public async Task<ActionResult<WorkItem>> Create(CreateWorkItemRequest request) {
         var workItem = await _workItemStore.CreateAsync(request.Title!);
 
@@ -41,6 +43,7 @@ public sealed class WorkItemsController : ControllerBase {
     }
 
     [HttpPatch("{id:guid}")]
+    [Authorize(Policy = "CanWrite")]
     public async Task<ActionResult<WorkItem>> Update(Guid id, UpdateWorkItemRequest request) {
         if (request.Title is null && request.Status is null) {
             return BadRequest(new ProblemDetails {
@@ -58,6 +61,7 @@ public sealed class WorkItemsController : ControllerBase {
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "CanWrite")]
     public async Task<IActionResult> Delete(Guid id) {
         return await _workItemStore.DeleteAsync(id)
             ? NoContent()
