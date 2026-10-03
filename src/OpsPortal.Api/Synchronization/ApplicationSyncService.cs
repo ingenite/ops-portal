@@ -1,11 +1,14 @@
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
+
 using OpsPortal.Api.Data;
 using OpsPortal.Api.Models;
 using OpsPortal.Api.Integrations.Atlassian;
 
 namespace OpsPortal.Api.Synchronization;
-public class ApplicationSyncService {
+
+public class ApplicationSyncService
+{
     private readonly IAtlassianAssetsClient _atlassianAssetsClient;
     private readonly IOptions<AtlassianOptions> _options;
     private readonly OpsPortalDbContext _dbContext;
@@ -13,13 +16,15 @@ public class ApplicationSyncService {
     public ApplicationSyncService(
         IAtlassianAssetsClient atlassianAssetsClient,
         IOptions<AtlassianOptions> options,
-        OpsPortalDbContext dbContext) {
+        OpsPortalDbContext dbContext)
+    {
         _atlassianAssetsClient = atlassianAssetsClient;
         _options = options;
         _dbContext = dbContext;
     }
 
-    public async Task SyncAsync(CancellationToken cancellationToken) {
+    public async Task SyncAsync(CancellationToken cancellationToken)
+    {
         var response = await _atlassianAssetsClient.GetApplicationsAsync(cancellationToken);
 
         var incomingApplications = response.Values
@@ -34,12 +39,15 @@ public class ApplicationSyncService {
 
         var syncedAtUtc = DateTimeOffset.UtcNow;
 
-        foreach (var incomingApplication in incomingApplications) {
+        foreach (var incomingApplication in incomingApplications)
+        {
             var existingApplication = existingApplications.SingleOrDefault(app =>
                 app.ObjectId == incomingApplication.ExternalId);
 
-            if (existingApplication is null) {
-                var application = new Application {
+            if (existingApplication is null)
+            {
+                var application = new Application
+                {
                     Id = Guid.NewGuid(),
                     WorkspaceId = workspaceId,
                     ObjectId = incomingApplication.ExternalId,
@@ -53,7 +61,9 @@ public class ApplicationSyncService {
                 _dbContext.Applications.Add(application);
 
                 existingApplications.Add(application);
-            } else {
+            }
+            else
+            {
                 // update
                 existingApplication.Name = incomingApplication.Name;
                 existingApplication.DeploymentMethod = incomingApplication.DeploymentMethod;

@@ -52,7 +52,8 @@ builder.Services.AddOptions<AtlassianOptions>()
     .ValidateOnStart();
 
 builder.Services.AddHttpClient<IAtlassianAssetsClient, AtlassianAssetsClient>(
-    (services, client) => {
+    (services, client) =>
+    {
         var options = services
             .GetRequiredService<IOptions<AtlassianOptions>>()
             .Value;
@@ -69,7 +70,8 @@ builder.Services.AddHttpClient<IAtlassianAssetsClient, AtlassianAssetsClient>(
     });
 
 // Worker Service
-if (builder.Configuration.GetValue<bool>("ApplicationSync:Enabled")) {
+if (builder.Configuration.GetValue<bool>("ApplicationSync:Enabled"))
+{
     builder.Services.AddHostedService<ApplicationSyncWorker>();
 }
 
@@ -77,11 +79,13 @@ if (builder.Configuration.GetValue<bool>("ApplicationSync:Enabled")) {
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(jwtOptions =>
 {
-	jwtOptions.Authority = builder.Configuration.GetValue<string>("Api:Authority");
-	jwtOptions.Audience = builder.Configuration.GetValue<string>("Api:Audience");
+    jwtOptions.Authority = builder.Configuration.GetValue<string>("Api:Authority");
+    jwtOptions.Audience = builder.Configuration.GetValue<string>("Api:Audience");
     if (builder.Environment.IsDevelopment()) jwtOptions.RequireHttpsMetadata = false;
-    jwtOptions.Events = new JwtBearerEvents {
-        OnTokenValidated = context => {
+    jwtOptions.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = context =>
+        {
             var identity = context.Principal?.Identity as ClaimsIdentity;
             var realmAccess = context.Principal?.FindFirst("realm_access");
 
@@ -89,11 +93,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
             using var document = JsonDocument.Parse(realmAccess.Value);
 
-            if (document.RootElement.TryGetProperty("roles", out var roles)) {
-                foreach (var role in roles.EnumerateArray()) {
+            if (document.RootElement.TryGetProperty("roles", out var roles))
+            {
+                foreach (var role in roles.EnumerateArray())
+                {
                     var roleName = role.GetString();
 
-                    if (!string.IsNullOrWhiteSpace(roleName)) {
+                    if (!string.IsNullOrWhiteSpace(roleName))
+                    {
                         identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
                     }
                 }
@@ -104,23 +111,28 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     };
 });
 
-builder.Services.AddAuthorization(options => {
-    options.AddPolicy("CanRead", policy => {
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("CanRead", policy =>
+    {
         policy.RequireAuthenticatedUser();
         policy.RequireRole("Reader", "Admin");
     });
-    options.AddPolicy("CanWrite", policy => {
-       policy.RequireAuthenticatedUser();
-       policy.RequireRole("Admin");
+    options.AddPolicy("CanWrite", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireRole("Admin");
     });
 });
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment()) {
+if (app.Environment.IsDevelopment())
+{
     app.MapOpenApi();
-    app.UseSwaggerUI(options => {
+    app.UseSwaggerUI(options =>
+    {
         options.SwaggerEndpoint("/openapi/v1.json", "OpsPortal API v1");
     });
 }

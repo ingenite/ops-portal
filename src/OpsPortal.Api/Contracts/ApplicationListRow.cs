@@ -1,6 +1,7 @@
 namespace OpsPortal.Api.Contracts;
 
-public sealed class ApplicationListRow {
+public sealed class ApplicationListRow
+{
     // Atlassian's Object Id
     public required string ExternalId { get; set; }
 

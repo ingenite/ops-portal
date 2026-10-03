@@ -1,13 +1,16 @@
 using System.Net;
 using System.Net.Http.Json;
+
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+
 using OpsPortal.Api.Storage;
 using OpsPortal.Api.Integrations.Atlassian;
 
 namespace OpsPortal.Api.Tests;
 
-public sealed class AuthorizationApiTests {
+public sealed class AuthorizationApiTests
+{
     [Theory]
     [InlineData(null, null, HttpStatusCode.Unauthorized)]
     [InlineData("Test user", null, HttpStatusCode.Forbidden)]
@@ -16,18 +19,22 @@ public sealed class AuthorizationApiTests {
     public async Task GetAll_enforces_read_access(
         string? username,
         string? role,
-        HttpStatusCode expectedStatus) {
+        HttpStatusCode expectedStatus)
+    {
         using var factory = new OpsPortalApiFactory();
         using var client = factory.CreateClient(
-            new WebApplicationFactoryClientOptions {
+            new WebApplicationFactoryClientOptions
+            {
                 BaseAddress = new Uri("https://localhost")
             });
 
-        if (username is not null) {
+        if (username is not null)
+        {
             client.DefaultRequestHeaders.Add("X-Test-User", username);
         }
 
-        if (role is not null) {
+        if (role is not null)
+        {
             client.DefaultRequestHeaders.Add("X-Test-Role", role);
         }
 
@@ -44,18 +51,22 @@ public sealed class AuthorizationApiTests {
     public async Task Create_enforces_write_access(
         string? username,
         string? role,
-        HttpStatusCode expectedStatus) {
+        HttpStatusCode expectedStatus)
+    {
         using var factory = new OpsPortalApiFactory();
         using var client = factory.CreateClient(
-            new WebApplicationFactoryClientOptions {
+            new WebApplicationFactoryClientOptions
+            {
                 BaseAddress = new Uri("https://localhost")
             });
 
-        if (username is not null) {
+        if (username is not null)
+        {
             client.DefaultRequestHeaders.Add("X-Test-User", username);
         }
 
-        if (role is not null) {
+        if (role is not null)
+        {
             client.DefaultRequestHeaders.Add("X-Test-Role", role);
         }
 
@@ -74,21 +85,25 @@ public sealed class AuthorizationApiTests {
     public async Task GetById_enforces_read_access(
         string? username,
         string? role,
-        HttpStatusCode expectedStatus) {
+        HttpStatusCode expectedStatus)
+    {
         using var factory = new OpsPortalApiFactory();
         using var client = factory.CreateClient(
-            new WebApplicationFactoryClientOptions {
+            new WebApplicationFactoryClientOptions
+            {
                 BaseAddress = new Uri("https://localhost")
             });
 
         var store = factory.Services.GetRequiredService<IWorkItemStore>();
         var workItem = await store.CreateAsync("Authorization test item");
 
-        if (username is not null) {
+        if (username is not null)
+        {
             client.DefaultRequestHeaders.Add("X-Test-User", username);
         }
 
-        if (role is not null) {
+        if (role is not null)
+        {
             client.DefaultRequestHeaders.Add("X-Test-Role", role);
         }
 
@@ -106,21 +121,25 @@ public sealed class AuthorizationApiTests {
     public async Task Update_enforces_write_access(
         string? username,
         string? role,
-        HttpStatusCode expectedStatus) {
+        HttpStatusCode expectedStatus)
+    {
         using var factory = new OpsPortalApiFactory();
         using var client = factory.CreateClient(
-            new WebApplicationFactoryClientOptions {
+            new WebApplicationFactoryClientOptions
+            {
                 BaseAddress = new Uri("https://localhost")
             });
 
         var store = factory.Services.GetRequiredService<IWorkItemStore>();
         var workItem = await store.CreateAsync("Authorization test item");
 
-        if (username is not null) {
+        if (username is not null)
+        {
             client.DefaultRequestHeaders.Add("X-Test-User", username);
         }
 
-        if (role is not null) {
+        if (role is not null)
+        {
             client.DefaultRequestHeaders.Add("X-Test-Role", role);
         }
 
@@ -139,21 +158,25 @@ public sealed class AuthorizationApiTests {
     public async Task Delete_enforces_write_access(
         string? username,
         string? role,
-        HttpStatusCode expectedStatus) {
+        HttpStatusCode expectedStatus)
+    {
         using var factory = new OpsPortalApiFactory();
         using var client = factory.CreateClient(
-            new WebApplicationFactoryClientOptions {
+            new WebApplicationFactoryClientOptions
+            {
                 BaseAddress = new Uri("https://localhost")
             });
 
         var store = factory.Services.GetRequiredService<IWorkItemStore>();
         var workItem = await store.CreateAsync("Authorization test item");
 
-        if (username is not null) {
+        if (username is not null)
+        {
             client.DefaultRequestHeaders.Add("X-Test-User", username);
         }
 
-        if (role is not null) {
+        if (role is not null)
+        {
             client.DefaultRequestHeaders.Add("X-Test-Role", role);
         }
 
@@ -171,20 +194,24 @@ public sealed class AuthorizationApiTests {
     public async Task GetWorkItemStatusReport_enforces_read_access(
         string? username,
         string? role,
-        HttpStatusCode expectedStatus) {
+        HttpStatusCode expectedStatus)
+    {
         using var database = new TestDatabase();
         using var factory = new OpsPortalApiFactory();
         using var applicationFactory = factory.WithDatabase(database, null);
 
-        using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions {
+        using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions
+        {
             BaseAddress = new Uri("https://localhost")
         });
 
-        if (username is not null) {
+        if (username is not null)
+        {
             client.DefaultRequestHeaders.Add("X-Test-User", username);
         }
 
-        if (role is not null) {
+        if (role is not null)
+        {
             client.DefaultRequestHeaders.Add("X-Test-Role", role);
         }
 
@@ -201,21 +228,25 @@ public sealed class AuthorizationApiTests {
     public async Task GetApplications_enforces_read_access(
         string? username,
         string? role,
-        HttpStatusCode expectedStatus) {
+        HttpStatusCode expectedStatus)
+    {
         using var database = new TestDatabase();
         using var factory = new OpsPortalApiFactory();
         var provider = new FakeAtlassianAssetsClient(new AtlassianAssetsQueryResponse());
         using var applicationFactory = factory.WithDatabase(database, provider);
 
-        using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions {
+        using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions
+        {
             BaseAddress = new Uri("https://localhost")
         });
 
-        if (username is not null) {
+        if (username is not null)
+        {
             client.DefaultRequestHeaders.Add("X-Test-User", username);
         }
 
-        if (role is not null) {
+        if (role is not null)
+        {
             client.DefaultRequestHeaders.Add("X-Test-Role", role);
         }
 
@@ -233,21 +264,25 @@ public sealed class AuthorizationApiTests {
         string? username,
         string? role,
         HttpStatusCode expectedStatus,
-        int expectedProviderCalls) {
+        int expectedProviderCalls)
+    {
         using var database = new TestDatabase();
         using var factory = new OpsPortalApiFactory();
         var provider = new FakeAtlassianAssetsClient(new AtlassianAssetsQueryResponse());
         using var applicationFactory = factory.WithDatabase(database, provider);
 
-        using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions {
+        using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions
+        {
             BaseAddress = new Uri("https://localhost")
         });
 
-        if (username is not null) {
+        if (username is not null)
+        {
             client.DefaultRequestHeaders.Add("X-Test-User", username);
         }
 
-        if (role is not null) {
+        if (role is not null)
+        {
             client.DefaultRequestHeaders.Add("X-Test-Role", role);
         }
 

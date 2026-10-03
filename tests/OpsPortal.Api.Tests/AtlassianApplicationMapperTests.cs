@@ -2,9 +2,11 @@ using OpsPortal.Api.Integrations.Atlassian;
 
 namespace OpsPortal.Api.Tests;
 
-public sealed class AtlassianApplicationMapperTests {
+public sealed class AtlassianApplicationMapperTests
+{
     [Fact]
-    public void Map_populated_asset_returns_expected_application_fields() {
+    public void Map_populated_asset_returns_expected_application_fields()
+    {
         // Arrange
         var asset = CreatePopulatedAsset();
 
@@ -21,7 +23,8 @@ public sealed class AtlassianApplicationMapperTests {
     }
 
     [Fact]
-    public void Map_asset_with_missing_optional_attributes_returns_null_for_optional_fields() {
+    public void Map_asset_with_missing_optional_attributes_returns_null_for_optional_fields()
+    {
         // Arrange
         var asset = CreatePopulatedAsset();
         asset.Attributes.Clear();
@@ -39,10 +42,12 @@ public sealed class AtlassianApplicationMapperTests {
     }
 
     [Fact]
-    public void Map_asset_with_empty_optional_attribute_values_returns_null_for_optional_fields() {
+    public void Map_asset_with_empty_optional_attribute_values_returns_null_for_optional_fields()
+    {
         // Arrange
         var asset = CreatePopulatedAsset();
-        foreach (var attribute in asset.Attributes) {
+        foreach (var attribute in asset.Attributes)
+        {
             attribute.ObjectAttributeValues.Clear();
         }
 
@@ -58,8 +63,10 @@ public sealed class AtlassianApplicationMapperTests {
         Assert.Null(map.Status);
     }
 
-    private static AtlassianAssetObject CreatePopulatedAsset() {
-        return new AtlassianAssetObject {
+    private static AtlassianAssetObject CreatePopulatedAsset()
+    {
+        return new AtlassianAssetObject
+        {
             Id = "1",
             ObjectKey = "TEST-1",
             Label = "Test label",

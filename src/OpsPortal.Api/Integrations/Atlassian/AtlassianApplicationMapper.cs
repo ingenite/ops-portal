@@ -2,8 +2,10 @@ using OpsPortal.Api.Contracts;
 
 namespace OpsPortal.Api.Integrations.Atlassian;
 
-public static class AtlassianApplicationMapper {
-    public static ApplicationListRow Map(AtlassianAssetObject asset) {
+public static class AtlassianApplicationMapper
+{
+    public static ApplicationListRow Map(AtlassianAssetObject asset)
+    {
         // Find the display values for Deployment Method and Status
         var deploymentMethod = asset.Attributes.FirstOrDefault(
             attribute => attribute.ObjectTypeAttributeId == "594")
@@ -18,7 +20,8 @@ public static class AtlassianApplicationMapper {
             .FirstOrDefault()
             ?.DisplayValue;
 
-        return new ApplicationListRow {
+        return new ApplicationListRow
+        {
             // Assign all five contract properties
             ExternalId = asset.Id,
             Key = asset.ObjectKey,

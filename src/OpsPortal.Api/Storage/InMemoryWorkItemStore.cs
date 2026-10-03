@@ -2,23 +2,28 @@ using OpsPortal.Api.Models;
 
 namespace OpsPortal.Api.Storage;
 
-public sealed class InMemoryWorkItemStore : IWorkItemStore {
+public sealed class InMemoryWorkItemStore : IWorkItemStore
+{
     private readonly object _syncRoot = new();
     private readonly Dictionary<Guid, WorkItem> _workItems = new();
 
-    public InMemoryWorkItemStore() {
+    public InMemoryWorkItemStore()
+    {
         CreateWorkItem("Review integration documentation");
         CreateWorkItem("Design the reporting page");
     }
 
-    public Task<WorkItem> CreateAsync(string title) {
+    public Task<WorkItem> CreateAsync(string title)
+    {
         return Task.FromResult(CreateWorkItem(title));
     }
 
-    private WorkItem CreateWorkItem(string title) {
+    private WorkItem CreateWorkItem(string title)
+    {
         var now = DateTimeOffset.UtcNow;
 
-        var workItem = new WorkItem {
+        var workItem = new WorkItem
+        {
             Id = Guid.NewGuid(),
             Title = title.Trim(),
             Status = "Open",
@@ -26,15 +31,18 @@ public sealed class InMemoryWorkItemStore : IWorkItemStore {
             UpdatedAtUtc = now
         };
 
-        lock (_syncRoot) {
+        lock (_syncRoot)
+        {
             _workItems.Add(workItem.Id, workItem);
         }
 
         return workItem;
     }
 
-    public Task<IReadOnlyCollection<WorkItem>> GetAllAsync() {
-        lock (_syncRoot) {
+    public Task<IReadOnlyCollection<WorkItem>> GetAllAsync()
+    {
+        lock (_syncRoot)
+        {
             var workItems = _workItems.Values
                 .OrderByDescending(workItem => workItem.UpdatedAtUtc)
                 .ToArray();
@@ -43,23 +51,30 @@ public sealed class InMemoryWorkItemStore : IWorkItemStore {
         }
     }
 
-    public Task<WorkItem?> GetByIdAsync(Guid id) {
-        lock (_syncRoot) {
+    public Task<WorkItem?> GetByIdAsync(Guid id)
+    {
+        lock (_syncRoot)
+        {
             return Task.FromResult(_workItems.GetValueOrDefault(id));
         }
     }
 
-    public Task<WorkItem?> UpdateAsync(Guid id, string? title, string? status) {
-        lock (_syncRoot) {
-            if (!_workItems.TryGetValue(id, out var workItem)) {
+    public Task<WorkItem?> UpdateAsync(Guid id, string? title, string? status)
+    {
+        lock (_syncRoot)
+        {
+            if (!_workItems.TryGetValue(id, out var workItem))
+            {
                 return Task.FromResult<WorkItem?>(null);
             }
 
-            if (title is not null) {
+            if (title is not null)
+            {
                 workItem.Title = title.Trim();
             }
 
-            if (status is not null) {
+            if (status is not null)
+            {
                 workItem.Status = status;
             }
 
@@ -69,8 +84,10 @@ public sealed class InMemoryWorkItemStore : IWorkItemStore {
         }
     }
 
-    public Task<bool> DeleteAsync(Guid id) {
-        lock (_syncRoot) {
+    public Task<bool> DeleteAsync(Guid id)
+    {
+        lock (_syncRoot)
+        {
             return Task.FromResult(_workItems.Remove(id));
         }
     }

@@ -1,6 +1,7 @@
 namespace OpsPortal.Api.Integrations.Atlassian;
 
-public class AtlassianAssetObject {
+public class AtlassianAssetObject
+{
     // Asset Object Id
     public required string Id { get; set; } = string.Empty;
 

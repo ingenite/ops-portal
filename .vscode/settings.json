@@ -19,5 +19,9 @@
   "[html]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true
+  },
+  "[csharp]": {
+  "editor.defaultFormatter": "ms-dotnettools.csharp",
+  "editor.formatOnSave": true
   }
 }

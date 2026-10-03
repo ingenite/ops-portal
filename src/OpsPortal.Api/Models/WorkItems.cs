@@ -1,6 +1,7 @@
 namespace OpsPortal.Api.Models;
 
-public sealed class WorkItem {
+public sealed class WorkItem
+{
     public Guid Id { get; init; }
 
     public required string Title { get; set; }

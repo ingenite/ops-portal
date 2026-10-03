@@ -1,19 +1,24 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+
 using OpsPortal.Api.Models;
+
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace OpsPortal.Api.Tests;
 
-public sealed class WorkItemsApiTests {
+public sealed class WorkItemsApiTests
+{
     [Fact]
     // async Task - test can await HTTP without blocking a thread
-    public async Task GetAll_returns_ok_with_a_json_array() {
+    public async Task GetAll_returns_ok_with_a_json_array()
+    {
         // Arrange - create an app factory/client and prepare input
         // `using var` disposes the factory/client automatically at the end of the test
         using var factory = new OpsPortalApiFactory();
-        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
             BaseAddress = new Uri("https://localhost")
         });
         client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
@@ -34,10 +39,12 @@ public sealed class WorkItemsApiTests {
     }
 
     [Fact]
-    public async Task GetById_returns_not_found_when_the_work_item_does_not_exist() {
+    public async Task GetById_returns_not_found_when_the_work_item_does_not_exist()
+    {
         // Arrange
         using var factory = new OpsPortalApiFactory();
-        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
             BaseAddress = new Uri("https://localhost")
         });
         client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
@@ -51,10 +58,12 @@ public sealed class WorkItemsApiTests {
 
     }
     [Fact]
-    public async Task Create_then_get_returns_created_work_item() {
+    public async Task Create_then_get_returns_created_work_item()
+    {
         // Arrange
         using var factory = new OpsPortalApiFactory();
-        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
             BaseAddress = new Uri("https://localhost")
         });
         client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
@@ -96,10 +105,12 @@ public sealed class WorkItemsApiTests {
         Assert.Equal(created.Status, fetched.Status);
     }
     [Fact]
-    public async Task Create_without_title_returns_bad_request() {
+    public async Task Create_without_title_returns_bad_request()
+    {
         // Arrange
         using var factory = new OpsPortalApiFactory();
-        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
             BaseAddress = new Uri("https://localhost")
         });
         client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
@@ -115,10 +126,12 @@ public sealed class WorkItemsApiTests {
     }
 
     [Fact]
-    public async Task Update_status_then_get_returns_persisted_changes() {
+    public async Task Update_status_then_get_returns_persisted_changes()
+    {
         // Arrange
         using var factory = new OpsPortalApiFactory();
-        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
             BaseAddress = new Uri("https://localhost")
         });
         client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
@@ -164,10 +177,12 @@ public sealed class WorkItemsApiTests {
     }
 
     [Fact]
-    public async Task Update_with_no_fields_returns_bad_request() {
+    public async Task Update_with_no_fields_returns_bad_request()
+    {
         // Arrange
         using var factory = new OpsPortalApiFactory();
-        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
             BaseAddress = new Uri("https://localhost")
         });
         client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
@@ -182,10 +197,12 @@ public sealed class WorkItemsApiTests {
         Assert.Equal(HttpStatusCode.BadRequest, patchResponse.StatusCode);
     }
     [Fact]
-    public async Task Update_status_fails_validation_returns_bad_request() {
+    public async Task Update_status_fails_validation_returns_bad_request()
+    {
         // Arrange
         using var factory = new OpsPortalApiFactory();
-        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
             BaseAddress = new Uri("https://localhost")
         });
         client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
@@ -212,10 +229,12 @@ public sealed class WorkItemsApiTests {
         Assert.Equal(HttpStatusCode.BadRequest, patchResponse.StatusCode);
     }
     [Fact]
-    public async Task Update_returns_not_found_when_the_work_item_does_not_exist() {
+    public async Task Update_returns_not_found_when_the_work_item_does_not_exist()
+    {
         // Arrange
         using var factory = new OpsPortalApiFactory();
-        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
             BaseAddress = new Uri("https://localhost")
         });
         client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
@@ -230,10 +249,12 @@ public sealed class WorkItemsApiTests {
         Assert.Equal(HttpStatusCode.NotFound, patchResponse.StatusCode);
     }
     [Fact]
-    public async Task Create_work_item_then_Delete_then_getById_returns_not_found() {
+    public async Task Create_work_item_then_Delete_then_getById_returns_not_found()
+    {
         // Arrange
         using var factory = new OpsPortalApiFactory();
-        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
             BaseAddress = new Uri("https://localhost")
         });
         client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
@@ -264,10 +285,12 @@ public sealed class WorkItemsApiTests {
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
     [Fact]
-    public async Task Delete_returns_not_found_when_the_work_item_does_not_exist() {
+    public async Task Delete_returns_not_found_when_the_work_item_does_not_exist()
+    {
         // Arrange
         using var factory = new OpsPortalApiFactory();
-        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
             BaseAddress = new Uri("https://localhost")
         });
         client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");

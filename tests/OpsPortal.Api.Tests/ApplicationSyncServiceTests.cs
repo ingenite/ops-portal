@@ -1,17 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+
 using OpsPortal.Api.Integrations.Atlassian;
 using OpsPortal.Api.Models;
 using OpsPortal.Api.Synchronization;
 
 namespace OpsPortal.Api.Tests;
 
-public sealed class ApplicationSyncServiceTests {
+public sealed class ApplicationSyncServiceTests
+{
     private const string WorkspaceId = "demo-workspace";
     private static readonly DateTimeOffset OldSync = new(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public async Task Sync_inserts_mapped_rows_with_one_utc_timestamp() {
+    public async Task Sync_inserts_mapped_rows_with_one_utc_timestamp()
+    {
         using var database = new TestDatabase();
         var before = DateTimeOffset.UtcNow;
 
@@ -21,7 +24,8 @@ public sealed class ApplicationSyncServiceTests {
         var rows = await verification.Applications.OrderBy(app => app.ObjectId).ToListAsync();
         Assert.Equal(2, rows.Count);
         Assert.Equal(2, rows.Select(app => app.Id).Distinct().Count());
-        Assert.All(rows, row => {
+        Assert.All(rows, row =>
+        {
             Assert.NotEqual(Guid.Empty, row.Id);
             Assert.Equal(WorkspaceId, row.WorkspaceId);
             Assert.Equal($"APM-{row.ObjectId}", row.Key);
@@ -36,12 +40,14 @@ public sealed class ApplicationSyncServiceTests {
     }
 
     [Fact]
-    public async Task Repeated_sync_preserves_local_identity_and_refreshes_timestamp() {
+    public async Task Repeated_sync_preserves_local_identity_and_refreshes_timestamp()
+    {
         using var database = new TestDatabase();
         var provider = new ProviderFake(Asset("22"));
         await Sync(database, provider);
         Guid originalId;
-        using (var context = database.CreateContext()) {
+        using (var context = database.CreateContext())
+        {
             var row = await context.Applications.SingleAsync();
             originalId = row.Id;
             // Avoid sleeps and clock-resolution assumptions when checking freshness.
@@ -62,7 +68,8 @@ public sealed class ApplicationSyncServiceTests {
     [InlineData("Hybrid", "Production")]
     [InlineData(null, null)]
     public async Task Sync_updates_descriptive_fields_including_cleared_values(
-        string? deploymentMethod, string? status) {
+        string? deploymentMethod, string? status)
+    {
         using var database = new TestDatabase();
         var original = LocalApplication("22");
         await Seed(database, original);
@@ -82,7 +89,8 @@ public sealed class ApplicationSyncServiceTests {
     }
 
     [Fact]
-    public async Task Sync_does_not_match_same_object_id_in_another_workspace() {
+    public async Task Sync_does_not_match_same_object_id_in_another_workspace()
+    {
         using var database = new TestDatabase();
         var other = LocalApplication("22", "other-workspace");
         await Seed(database, other);
@@ -105,7 +113,8 @@ public sealed class ApplicationSyncServiceTests {
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task Sync_preserves_rows_absent_from_empty_or_partial_response(bool includeIncoming) {
+    public async Task Sync_preserves_rows_absent_from_empty_or_partial_response(bool includeIncoming)
+    {
         using var database = new TestDatabase();
         var original = LocalApplication("99");
         await Seed(database, original);
@@ -125,7 +134,8 @@ public sealed class ApplicationSyncServiceTests {
     }
 
     [Fact]
-    public async Task Provider_failure_leaves_persisted_data_unchanged() {
+    public async Task Provider_failure_leaves_persisted_data_unchanged()
+    {
         using var database = new TestDatabase();
         var original = LocalApplication("22");
         await Seed(database, original);
@@ -145,7 +155,8 @@ public sealed class ApplicationSyncServiceTests {
     }
 
     [Fact]
-    public async Task Duplicate_source_ids_in_one_batch_create_only_one_row() {
+    public async Task Duplicate_source_ids_in_one_batch_create_only_one_row()
+    {
         using var database = new TestDatabase();
 
         await Sync(database, new ProviderFake(Asset("22"), Asset("22")));
@@ -156,7 +167,8 @@ public sealed class ApplicationSyncServiceTests {
     }
 
     [Fact]
-    public async Task Cancellation_reaches_provider_and_leaves_database_unchanged() {
+    public async Task Cancellation_reaches_provider_and_leaves_database_unchanged()
+    {
         using var database = new TestDatabase();
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
@@ -171,41 +183,54 @@ public sealed class ApplicationSyncServiceTests {
     }
 
     private static async Task Sync(TestDatabase database, IAtlassianAssetsClient provider,
-        CancellationToken cancellationToken = default) {
+        CancellationToken cancellationToken = default)
+    {
         using var context = database.CreateContext();
         var service = new ApplicationSyncService(provider,
             Options.Create(new AtlassianOptions { WorkspaceId = WorkspaceId }), context);
         await service.SyncAsync(cancellationToken);
     }
 
-    private static async Task Seed(TestDatabase database, Application application) {
+    private static async Task Seed(TestDatabase database, Application application)
+    {
         using var context = database.CreateContext();
         context.Applications.Add(application);
         await context.SaveChangesAsync();
     }
 
-    private static Application LocalApplication(string objectId, string workspaceId = WorkspaceId) => new() {
-        Id = Guid.NewGuid(), WorkspaceId = workspaceId, ObjectId = objectId,
-        Key = $"APM-{objectId}", Name = "Old CRM", DeploymentMethod = "On-premises",
-        Status = "Old status", LastSyncedAtUtc = OldSync
+    private static Application LocalApplication(string objectId, string workspaceId = WorkspaceId) => new()
+    {
+        Id = Guid.NewGuid(),
+        WorkspaceId = workspaceId,
+        ObjectId = objectId,
+        Key = $"APM-{objectId}",
+        Name = "Old CRM",
+        DeploymentMethod = "On-premises",
+        Status = "Old status",
+        LastSyncedAtUtc = OldSync
     };
 
     private static AtlassianAssetObject Asset(string id, string name = "Demo CRM",
-        string? deploymentMethod = "Cloud", string? status = "Test") => new() {
-        Id = id, ObjectKey = $"APM-{id}", Label = name,
-        Attributes = [
+        string? deploymentMethod = "Cloud", string? status = "Test") => new()
+        {
+            Id = id,
+            ObjectKey = $"APM-{id}",
+            Label = name,
+            Attributes = [
             new() { ObjectTypeAttributeId = "594", ObjectAttributeValues =
                 deploymentMethod is null ? [] : [new() { DisplayValue = deploymentMethod }] },
             new() { ObjectTypeAttributeId = "597", ObjectAttributeValues =
                 status is null ? [] : [new() { DisplayValue = status }] }
         ]
-    };
+        };
 
-    private sealed class ProviderFake(params AtlassianAssetObject[] assets) : IAtlassianAssetsClient {
+    private sealed class ProviderFake(params AtlassianAssetObject[] assets) : IAtlassianAssetsClient
+    {
         public Exception? Failure { get; init; }
         public CancellationToken ReceivedToken { get; private set; }
 
-        public Task<AtlassianAssetsQueryResponse> GetApplicationsAsync(CancellationToken cancellationToken) {
+        public Task<AtlassianAssetsQueryResponse> GetApplicationsAsync(CancellationToken cancellationToken)
+        {
             ReceivedToken = cancellationToken;
             cancellationToken.ThrowIfCancellationRequested();
             return Failure is null

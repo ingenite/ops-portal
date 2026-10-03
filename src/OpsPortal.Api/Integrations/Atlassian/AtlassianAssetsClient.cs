@@ -2,19 +2,22 @@ using Microsoft.Extensions.Options;
 
 namespace OpsPortal.Api.Integrations.Atlassian;
 
-public sealed class AtlassianAssetsClient : IAtlassianAssetsClient {
+public sealed class AtlassianAssetsClient : IAtlassianAssetsClient
+{
     private readonly HttpClient _httpClient;
     private readonly IOptions<AtlassianOptions> _options;
 
     public AtlassianAssetsClient(
         HttpClient httpClient,
-        IOptions<AtlassianOptions> options) {
+        IOptions<AtlassianOptions> options)
+    {
         _httpClient = httpClient;
         _options = options;
     }
 
-     public async Task<AtlassianAssetsQueryResponse> GetApplicationsAsync(
-        CancellationToken cancellationToken) {
+    public async Task<AtlassianAssetsQueryResponse> GetApplicationsAsync(
+       CancellationToken cancellationToken)
+    {
         var options = _options.Value;
 
         var requestUri =
@@ -24,8 +27,10 @@ public sealed class AtlassianAssetsClient : IAtlassianAssetsClient {
             $"&maxResults={options.ApplicationsMaxResults}" +
             "&includeAttributes=true";
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, requestUri) {
-            Content = JsonContent.Create(new {
+        using var request = new HttpRequestMessage(HttpMethod.Post, requestUri)
+        {
+            Content = JsonContent.Create(new
+            {
                 qlQuery = options.ApplicationsAqlQuery
             })
         };

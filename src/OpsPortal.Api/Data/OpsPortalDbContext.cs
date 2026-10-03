@@ -1,23 +1,27 @@
 using Microsoft.EntityFrameworkCore;
+
 using OpsPortal.Api.Models;
 
 namespace OpsPortal.Api.Data;
 
 // sealed - can't be inherited by another class
 // NewClass : InheritsThisClass
-public sealed class OpsPortalDbContext : DbContext {
+public sealed class OpsPortalDbContext : DbContext
+{
     // constructor
     // DbContextOptions<TContext> takes config for SQL Srv
     // runs the inherited class' constructor
     public OpsPortalDbContext(DbContextOptions<OpsPortalDbContext> options)
-        : base(options) {
+        : base(options)
+    {
 
     }
 
     public DbSet<WorkItem> WorkItems => Set<WorkItem>();
     public DbSet<Application> Applications => Set<Application>();
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder) {
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
         var workItem = modelBuilder.Entity<WorkItem>();
 
         workItem.ToTable("WorkItems");

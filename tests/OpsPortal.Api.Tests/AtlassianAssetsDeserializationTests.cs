@@ -1,11 +1,14 @@
 using System.Text.Json;
+
 using OpsPortal.Api.Integrations.Atlassian;
 
 namespace OpsPortal.Api.Tests;
 
-public sealed class AtlassianAssetsDeserializationTests {
+public sealed class AtlassianAssetsDeserializationTests
+{
     [Fact]
-    public void Atlassian_Assets_response_deserializes_into_types() {
+    public void Atlassian_Assets_response_deserializes_into_types()
+    {
         // Arrange - static Assets API response
         var json = """
             {

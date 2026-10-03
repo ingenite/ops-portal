@@ -1,6 +1,7 @@
 namespace OpsPortal.Api.Synchronization;
 
-public sealed class ApplicationSyncCoordinator {
+public sealed class ApplicationSyncCoordinator
+{
     private readonly SemaphoreSlim _gate = new(1, 1);
 
     public Task<bool> TryEnterAsync(CancellationToken cancellationToken) =>

@@ -14,11 +14,15 @@ using OpsPortal.Api.Synchronization;
 
 namespace OpsPortal.Api.Tests;
 
-public sealed class OpsPortalApiFactory : WebApplicationFactory<Program> {
-    protected override void ConfigureWebHost(IWebHostBuilder builder) {
-        builder.ConfigureAppConfiguration((_, configuration) => {
+public sealed class OpsPortalApiFactory : WebApplicationFactory<Program>
+{
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.ConfigureAppConfiguration((_, configuration) =>
+        {
             configuration.AddInMemoryCollection(
-                new Dictionary<string, string?> {
+                new Dictionary<string, string?>
+                {
                     ["connectionStrings:OpsPortalDatabase"] =
                         "Server=unused;Database=unused;User Id=unused;Password=unused",
                     ["Atlassian:CloudId"] = "test-cloud-id",
@@ -31,7 +35,8 @@ public sealed class OpsPortalApiFactory : WebApplicationFactory<Program> {
                 });
         });
 
-        builder.ConfigureTestServices(services => {
+        builder.ConfigureTestServices(services =>
+        {
             services.RemoveAll<IWorkItemStore>();
             services.AddSingleton<IWorkItemStore, InMemoryWorkItemStore>();
 
@@ -39,14 +44,16 @@ public sealed class OpsPortalApiFactory : WebApplicationFactory<Program> {
                 service.ServiceType == typeof(IHostedService) &&
                 service.ImplementationType == typeof(ApplicationSyncWorker));
 
-            if (worker is not null) {
+            if (worker is not null)
+            {
                 services.Remove(worker);
             }
 
-            services.AddAuthentication(options => {
-               options.DefaultAuthenticateScheme = "Test";
-               options.DefaultChallengeScheme = "Test";
-               options.DefaultForbidScheme = "Test";
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = "Test";
+                options.DefaultChallengeScheme = "Test";
+                options.DefaultForbidScheme = "Test";
             })
             .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
                 "Test",
@@ -56,12 +63,16 @@ public sealed class OpsPortalApiFactory : WebApplicationFactory<Program> {
 
     internal WebApplicationFactory<Program> WithDatabase(
         TestDatabase database,
-        IAtlassianAssetsClient? provider = null) {
-        return WithWebHostBuilder(builder => {
-            builder.ConfigureTestServices(services => {
+        IAtlassianAssetsClient? provider = null)
+    {
+        return WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
                 services.RemoveAll<OpsPortalDbContext>();
                 services.AddScoped<OpsPortalDbContext>(_ => database.CreateContext());
-                if (provider is not null) {
+                if (provider is not null)
+                {
                     services.RemoveAll<IAtlassianAssetsClient>();
                     services.AddSingleton<IAtlassianAssetsClient>(provider);
                 }

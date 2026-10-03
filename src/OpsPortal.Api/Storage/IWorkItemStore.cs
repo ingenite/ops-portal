@@ -2,7 +2,8 @@ using OpsPortal.Api.Models;
 
 namespace OpsPortal.Api.Storage;
 
-public interface IWorkItemStore {
+public interface IWorkItemStore
+{
     Task<IReadOnlyCollection<WorkItem>> GetAllAsync();
 
     Task<WorkItem?> GetByIdAsync(Guid id);

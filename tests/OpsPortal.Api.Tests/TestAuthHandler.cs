@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 
@@ -18,7 +19,8 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
     {
         var username = Request.Headers["X-Test-User"].ToString();
 
-        if (string.IsNullOrWhiteSpace(username)) {
+        if (string.IsNullOrWhiteSpace(username))
+        {
             return Task.FromResult(AuthenticateResult.NoResult());
         }
 
@@ -28,7 +30,8 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
 
         var role = Request.Headers["X-Test-Role"].ToString();
 
-        if (!string.IsNullOrWhiteSpace(role)) {
+        if (!string.IsNullOrWhiteSpace(role))
+        {
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
 

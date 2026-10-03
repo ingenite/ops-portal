@@ -1,17 +1,22 @@
 using System.Net;
 using System.Text.Json;
+
 using Microsoft.Extensions.Options;
+
 using OpsPortal.Api.Integrations.Atlassian;
 
 using Xunit.Sdk;
 
 namespace OpsPortal.Api.Tests;
 
-public sealed class AtlassianAssetsClientTests {
+public sealed class AtlassianAssetsClientTests
+{
     [Fact]
-    public async Task GetApplicationsAsync_sends_the_configured_AQL_request_and_deserializes_the_response() {
+    public async Task GetApplicationsAsync_sends_the_configured_AQL_request_and_deserializes_the_response()
+    {
         // Arrange
-        var options = new AtlassianOptions {
+        var options = new AtlassianOptions
+        {
             CloudId = "cloud-123",
             WorkspaceId = "workspace-456",
             ApplicationsAqlQuery = "objectType = Application",
@@ -75,7 +80,8 @@ public sealed class AtlassianAssetsClientTests {
 
         var handler = new FakeHttpMessageHandler(json);
 
-        using var httpClient = new HttpClient(handler) {
+        using var httpClient = new HttpClient(handler)
+        {
             BaseAddress = new Uri("https://example.test/")
         };
 
@@ -116,9 +122,11 @@ public sealed class AtlassianAssetsClientTests {
     }
 
     [Fact]
-    public async Task GetApplicationsAsync_throws_when_provider_returns_forbidden() {
+    public async Task GetApplicationsAsync_throws_when_provider_returns_forbidden()
+    {
         // Arrange
-        var options = new AtlassianOptions {
+        var options = new AtlassianOptions
+        {
             CloudId = "cloud-123",
             WorkspaceId = "workspace-456",
             ApplicationsAqlQuery = "objectType = Application",
@@ -129,7 +137,8 @@ public sealed class AtlassianAssetsClientTests {
             "{}",
             HttpStatusCode.Forbidden);
 
-        using var httpClient = new HttpClient(handler) {
+        using var httpClient = new HttpClient(handler)
+        {
             BaseAddress = new Uri("https://example.test/")
         };
 
@@ -150,7 +159,8 @@ public sealed class AtlassianAssetsClientTests {
     public async Task GetApplicationsAsync_throws_when_response_is_json_null()
     {
         // Arrange
-        var options = new AtlassianOptions {
+        var options = new AtlassianOptions
+        {
             CloudId = "cloud-123",
             WorkspaceId = "workspace-456",
             ApplicationsAqlQuery = "objectType = Application",
@@ -159,7 +169,8 @@ public sealed class AtlassianAssetsClientTests {
 
         var handler = new FakeHttpMessageHandler("null");
 
-        using var httpClient = new HttpClient(handler) {
+        using var httpClient = new HttpClient(handler)
+        {
             BaseAddress = new Uri("https://example.test/")
         };
         var client = new AtlassianAssetsClient(
@@ -177,13 +188,15 @@ public sealed class AtlassianAssetsClientTests {
             exception.Message);
     }
 
-    private sealed class FakeHttpMessageHandler : HttpMessageHandler {
+    private sealed class FakeHttpMessageHandler : HttpMessageHandler
+    {
         private readonly string _json;
         private readonly HttpStatusCode _statusCode;
 
         public FakeHttpMessageHandler(
             string json,
-            HttpStatusCode statusCode = HttpStatusCode.OK) {
+            HttpStatusCode statusCode = HttpStatusCode.OK)
+        {
             _json = json;
             _statusCode = statusCode;
         }
@@ -194,14 +207,16 @@ public sealed class AtlassianAssetsClientTests {
 
         protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
-            CancellationToken cancellationToken) {
+            CancellationToken cancellationToken)
+        {
 
             RequestMethod = request.Method;
             RequestUri = request.RequestUri;
             RequestBody = await request.Content!
                 .ReadAsStringAsync(cancellationToken);
 
-            var response = new HttpResponseMessage(_statusCode) {
+            var response = new HttpResponseMessage(_statusCode)
+            {
                 Content = new StringContent(_json)
             };
 

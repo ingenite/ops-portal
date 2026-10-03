@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
+
 using OpsPortal.Api.Contracts;
 using OpsPortal.Api.Data;
 using OpsPortal.Api.Integrations.Atlassian;
@@ -10,7 +11,8 @@ namespace OpsPortal.Api.Controllers;
 
 [ApiController]
 [Route("api/applications")]
-public sealed class ApplicationsController : ControllerBase {
+public sealed class ApplicationsController : ControllerBase
+{
     private readonly ApplicationQuery _applicationQuery;
     private readonly ApplicationSyncService _applicationSyncService;
     private readonly IOptions<AtlassianOptions> _options;
@@ -19,7 +21,8 @@ public sealed class ApplicationsController : ControllerBase {
     public ApplicationsController(ApplicationQuery applicationQuery,
         ApplicationSyncService applicationSyncService,
         IOptions<AtlassianOptions> options,
-        ApplicationSyncCoordinator coordinator) {
+        ApplicationSyncCoordinator coordinator)
+    {
         _applicationQuery = applicationQuery;
         _applicationSyncService = applicationSyncService;
         _options = options;
@@ -29,7 +32,8 @@ public sealed class ApplicationsController : ControllerBase {
     [HttpGet]
     [Authorize(Policy = "CanRead")]
     public async Task<ActionResult<IReadOnlyList<ApplicationListRow>>> GetAll(
-        CancellationToken cancellationToken) {
+        CancellationToken cancellationToken)
+    {
         var applications = await _applicationQuery.GetAllAsync(
             _options.Value.WorkspaceId,
             cancellationToken);
@@ -40,10 +44,12 @@ public sealed class ApplicationsController : ControllerBase {
     [HttpPost("sync")]
     [Authorize(Policy = "CanWrite")]
     public async Task<IActionResult> SyncApplications(
-        CancellationToken cancellationToken) {
+        CancellationToken cancellationToken)
+    {
 
         var entered = await _coordinator.TryEnterAsync(cancellationToken);
-        if (!entered) {
+        if (!entered)
+        {
             return Problem(
                 statusCode: StatusCodes.Status409Conflict,
                 title: "Application sync already in progress",
@@ -51,16 +57,21 @@ public sealed class ApplicationsController : ControllerBase {
             );
         }
 
-        try {
+        try
+        {
             await _applicationSyncService.SyncAsync(cancellationToken);
             return NoContent();
-        } catch (HttpRequestException) {
+        }
+        catch (HttpRequestException)
+        {
             return Problem(
                 statusCode: StatusCodes.Status502BadGateway,
                 title: "Problem contacting external provider",
                 detail: "Unable to synchronize applications from the provider API."
             );
-        } finally {
+        }
+        finally
+        {
             _coordinator.Exit();
         }
     }

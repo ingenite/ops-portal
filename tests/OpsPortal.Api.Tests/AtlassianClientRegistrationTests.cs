@@ -1,21 +1,28 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
+
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+
 using OpsPortal.Api.Integrations.Atlassian;
 
 namespace OpsPortal.Api.Tests;
 
-public sealed class AtlassianClientRegistrationTests {
+public sealed class AtlassianClientRegistrationTests
+{
     [Fact]
-    public async Task Registered_client_sends_basic_auth_with_configured_email_and_api_token() {
+    public async Task Registered_client_sends_basic_auth_with_configured_email_and_api_token()
+    {
         // Arrange - keep Program.cs registration; replace only the network transport.
         using var factory = new OpsPortalApiFactory();
         var handler = new CapturingHttpMessageHandler();
-        using var applicationFactory = factory.WithWebHostBuilder(builder => {
-            builder.ConfigureTestServices(services => {
-                services.ConfigureHttpClientDefaults(client => {
+        using var applicationFactory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.ConfigureHttpClientDefaults(client =>
+                {
                     client.ConfigurePrimaryHttpMessageHandler(() => handler);
                 });
             });
@@ -40,19 +47,22 @@ public sealed class AtlassianClientRegistrationTests {
         Assert.Contains("application/json", handler.AcceptMediaTypes);
     }
 
-    private sealed class CapturingHttpMessageHandler : HttpMessageHandler {
+    private sealed class CapturingHttpMessageHandler : HttpMessageHandler
+    {
         public AuthenticationHeaderValue? Authorization { get; private set; }
         public Uri? RequestUri { get; private set; }
         public string?[] AcceptMediaTypes { get; private set; } = [];
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
-            CancellationToken cancellationToken) {
+            CancellationToken cancellationToken)
+        {
             Authorization = request.Headers.Authorization;
             RequestUri = request.RequestUri;
             AcceptMediaTypes = request.Headers.Accept.Select(value => value.MediaType).ToArray();
 
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) {
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
                 Content = new StringContent("""{"values": []}""", Encoding.UTF8, "application/json")
             });
         }
