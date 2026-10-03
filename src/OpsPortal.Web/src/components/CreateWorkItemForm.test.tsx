@@ -1,59 +1,55 @@
-import { cleanup, render, screen } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
-import { afterEach, describe, expect, it, vi } from "vitest"
-import { CreateWorkItemForm } from "./CreateWorkItemForm"
+import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { CreateWorkItemForm } from "./CreateWorkItemForm";
 
 afterEach(() => {
-    cleanup()
-})
+  cleanup();
+});
 
 describe("CreateWorkItemForm", () => {
-    it("renders a title input and a Create button", () => {
-        render(<CreateWorkItemForm onCreate={async () => {}} />)
+  it("renders a title input and a Create button", () => {
+    render(<CreateWorkItemForm onCreate={async () => {}} />);
 
-        expect(
-            screen.getByRole("textbox", { name: "New WorkItem Title:" })
-        ).toBeInstanceOf(HTMLInputElement)
+    expect(
+      screen.getByRole("textbox", { name: "New WorkItem Title:" }),
+    ).toBeInstanceOf(HTMLInputElement);
 
-        expect(
-            screen.getByRole("button", { name: "Create" })
-        ).toBeInstanceOf(HTMLButtonElement)
-    })
+    expect(screen.getByRole("button", { name: "Create" })).toBeInstanceOf(
+      HTMLButtonElement,
+    );
+  });
 
-    it("calls onCreate with a trimmed title on submit", async () => {
-        const user = userEvent.setup()
-        const onCreate = vi.fn().mockResolvedValue(undefined)
+  it("calls onCreate with a trimmed title on submit", async () => {
+    const user = userEvent.setup();
+    const onCreate = vi.fn().mockResolvedValue(undefined);
 
-        render(<CreateWorkItemForm onCreate={onCreate} />)
+    render(<CreateWorkItemForm onCreate={onCreate} />);
 
-        await user.type(
-            screen.getByRole("textbox", { name: "New WorkItem Title:" }),
-            "  Review API contract  "
-        )
+    await user.type(
+      screen.getByRole("textbox", { name: "New WorkItem Title:" }),
+      "  Review API contract  ",
+    );
 
-        await user.click(
-            screen.getByRole("button", { name: "Create" })
-        )
+    await user.click(screen.getByRole("button", { name: "Create" }));
 
-        expect(onCreate).toHaveBeenCalledTimes(1)
-        expect(onCreate).toHaveBeenCalledWith("Review API contract")
-    })
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(onCreate).toHaveBeenCalledWith("Review API contract");
+  });
 
-    it("does not call onCreate when the submitted title contains only whitespace", async () => {
-        const user = userEvent.setup()
-        const onCreate = vi.fn().mockResolvedValue(undefined)
+  it("does not call onCreate when the submitted title contains only whitespace", async () => {
+    const user = userEvent.setup();
+    const onCreate = vi.fn().mockResolvedValue(undefined);
 
-        render(<CreateWorkItemForm onCreate={onCreate} />)
+    render(<CreateWorkItemForm onCreate={onCreate} />);
 
-        await user.type(
-            screen.getByRole("textbox", { name: "New WorkItem Title:" }),
-            "  "
-        )
+    await user.type(
+      screen.getByRole("textbox", { name: "New WorkItem Title:" }),
+      "  ",
+    );
 
-        await user.click(
-            screen.getByRole("button", { name: "Create" })
-        )
+    await user.click(screen.getByRole("button", { name: "Create" }));
 
-        expect(onCreate).not.toHaveBeenCalled()
-    })
-})
+    expect(onCreate).not.toHaveBeenCalled();
+  });
+});

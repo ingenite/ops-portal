@@ -11,9 +11,9 @@ export type WorkItem = {
 };
 
 export type CreateWorkItemRequest = {
-    title: string;
+  title: string;
 };
 
 export type UpdateWorkItemStatusRequest = {
   status: WorkItemStatus;
-}
+};

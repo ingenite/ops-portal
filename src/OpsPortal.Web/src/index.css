@@ -1,5 +1,5 @@
 :root {
-  font-family: system-ui, 'Segoe UI', sans-serif;
+  font-family: system-ui, "Segoe UI", sans-serif;
   color-scheme: dark;
   color: #e2e8f0;
   background: #0f172a;
@@ -28,7 +28,7 @@ h1 {
   color: #f8fafc;
 }
 
-[role='alert'] {
+[role="alert"] {
   color: #fca5a5;
 }
 
@@ -69,7 +69,7 @@ h1 {
   margin-top: 1.5rem;
 }
 
-.main-nav button[aria-pressed='true'] {
+.main-nav button[aria-pressed="true"] {
   color: #ffffff;
   background: #1d4ed8;
   border-color: #60a5fa;
@@ -145,7 +145,7 @@ select:disabled {
   width: 100%;
 }
 
-.create-work-item-form [role='alert'] {
+.create-work-item-form [role="alert"] {
   margin: 0;
 }
 

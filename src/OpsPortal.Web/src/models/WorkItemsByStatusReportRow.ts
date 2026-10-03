@@ -1,6 +1,6 @@
-import type { WorkItemStatus } from "./WorkItem"
+import type { WorkItemStatus } from "./WorkItem";
 
 export type WorkItemsByStatusReportRow = {
-    status: WorkItemStatus;
-    count: number;
-}
+  status: WorkItemStatus;
+  count: number;
+};

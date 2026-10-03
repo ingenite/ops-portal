@@ -1,82 +1,85 @@
-import type { WorkItem,
-            CreateWorkItemRequest,
-            UpdateWorkItemStatusRequest
-        } from "../models/WorkItem";
+import type {
+  WorkItem,
+  CreateWorkItemRequest,
+  UpdateWorkItemStatusRequest,
+} from "../models/WorkItem";
 
 import keycloak from "../auth/keycloak";
 
 export async function getWorkItems(): Promise<WorkItem[]> {
-    await keycloak.updateToken();
+  await keycloak.updateToken();
 
-    const response = await fetch('/api/work-items', {
-        method: "GET",
-        headers: {
-            "authorization": `Bearer ${keycloak.token}`
-        }
-    })
+  const response = await fetch("/api/work-items", {
+    method: "GET",
+    headers: {
+      authorization: `Bearer ${keycloak.token}`,
+    },
+  });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
+  if (!response.ok) {
+    throw new Error(`HTTP error! Status: ${response.status}`);
+  }
 
-    const apiWorkItems: WorkItem[] = await response.json();
-    return apiWorkItems
-};
+  const apiWorkItems: WorkItem[] = await response.json();
+  return apiWorkItems;
+}
 
-export async function createWorkItem(request: CreateWorkItemRequest): Promise<WorkItem> {
-    await keycloak.updateToken();
+export async function createWorkItem(
+  request: CreateWorkItemRequest,
+): Promise<WorkItem> {
+  await keycloak.updateToken();
 
-    const response = await fetch("/api/work-items", {
-        method: "POST",
-        body: JSON.stringify(request),
-        headers: {
-            "Content-Type": "application/json",
-            "authorization": `Bearer ${keycloak.token}`
-        }
-    })
-    // Response.ok = true for 200-299
-    if (!response.ok) {
-        throw new Error(`Failed to create WorkItem: ${response.status}`)
-    }
+  const response = await fetch("/api/work-items", {
+    method: "POST",
+    body: JSON.stringify(request),
+    headers: {
+      "Content-Type": "application/json",
+      authorization: `Bearer ${keycloak.token}`,
+    },
+  });
+  // Response.ok = true for 200-299
+  if (!response.ok) {
+    throw new Error(`Failed to create WorkItem: ${response.status}`);
+  }
 
-    const created: WorkItem = await response.json();
-    return created
+  const created: WorkItem = await response.json();
+  return created;
 }
 
 export async function deleteWorkItem(id: string): Promise<void> {
-    await keycloak.updateToken();
+  await keycloak.updateToken();
 
-    const response = await fetch(`/api/work-items/${id}`, {
-        method: "DELETE",
-        headers: {
-            "authorization": `Bearer ${keycloak.token}`
-        }
-    })
+  const response = await fetch(`/api/work-items/${id}`, {
+    method: "DELETE",
+    headers: {
+      authorization: `Bearer ${keycloak.token}`,
+    },
+  });
 
-    if (!response.ok) {
-        throw new Error(`Could not delete item: ${response.status}`)
-    }
+  if (!response.ok) {
+    throw new Error(`Could not delete item: ${response.status}`);
+  }
 }
 
 export async function updateWorkItem(
-    id: string,
-    request: UpdateWorkItemStatusRequest
+  id: string,
+  request: UpdateWorkItemStatusRequest,
 ): Promise<WorkItem> {
-    await keycloak.updateToken();
+  await keycloak.updateToken();
 
-    const response = await fetch(`/api/work-items/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(request),
-        headers: {
-            "Content-Type": "application/json",
-            "authorization": `Bearer ${keycloak.token}`
-        }
-    })
+  const response = await fetch(`/api/work-items/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(request),
+    headers: {
+      "Content-Type": "application/json",
+      authorization: `Bearer ${keycloak.token}`,
+    },
+  });
 
-    if (!response.ok) {
-        throw new Error(`Failed to update WorkItem: ${response.status}`)
-    }
+  if (!response.ok) {
+    throw new Error(`Failed to update WorkItem: ${response.status}`);
+  }
 
-    const updated: WorkItem = await response.json();
-    return updated
+  const updated: WorkItem = await response.json();
+  return updated;
 }

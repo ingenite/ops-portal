@@ -1,68 +1,60 @@
 import { useState } from "react";
 
 type CreateWorkItemFormProps = {
-    onCreate: (title: string) => Promise<void>
-}
+  onCreate: (title: string) => Promise<void>;
+};
 
 export function CreateWorkItemForm({ onCreate }: CreateWorkItemFormProps) {
-    const [title, setTitle] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false)
-    const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [title, setTitle] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    async function handleSubmit(event: React.SyntheticEvent) {
-        event.preventDefault()
+  async function handleSubmit(event: React.SyntheticEvent) {
+    event.preventDefault();
 
-        const trimmedTitle = title.trim()
-        if (!trimmedTitle) {
-            return
-        }
-
-        setErrorMessage(null)
-        setIsSubmitting(true)
-
-        try {
-            await onCreate(trimmedTitle)
-            setTitle("")
-        } catch (error: unknown) {
-            setErrorMessage(
-                error instanceof Error
-                    ? error.message
-                    : 'An unknown error occurred'
-            )
-        } finally {
-            setIsSubmitting(false)
-        }
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      return;
     }
 
-    return (
-        <form className="create-work-item-form" onSubmit={handleSubmit}>
-            <div className="create-work-item-fields">
+    setErrorMessage(null);
+    setIsSubmitting(true);
 
+    try {
+      await onCreate(trimmedTitle);
+      setTitle("");
+    } catch (error: unknown) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "An unknown error occurred",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
-                <label className="title-field">
-                    <span>New WorkItem Title:</span>
-                    <input
-                        type="text"
-                        value={title}
-                        onChange={e => setTitle(e.target.value)}
-                        disabled={isSubmitting}
-                    />
-                </label>
+  return (
+    <form className="create-work-item-form" onSubmit={handleSubmit}>
+      <div className="create-work-item-fields">
+        <label className="title-field">
+          <span>New WorkItem Title:</span>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            disabled={isSubmitting}
+          />
+        </label>
 
+        <button
+          className="primary-button"
+          type="submit"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Creating..." : "Create"}
+        </button>
+      </div>
 
-
-                <button
-                    className="primary-button"
-                    type="submit"
-                    disabled={isSubmitting}
-                >
-                    {isSubmitting ? "Creating..." : "Create"}
-                </button>
-            </div>
-
-            {errorMessage && (
-                <p role="alert">{errorMessage}</p>
-            )}
-        </form>
-    )
+      {errorMessage && <p role="alert">{errorMessage}</p>}
+    </form>
+  );
 }

@@ -1,96 +1,94 @@
 import { useEffect, useState } from "react";
-import type {  WorkItem, WorkItemStatus } from "./models/WorkItem";
-import { getWorkItems, createWorkItem, deleteWorkItem, updateWorkItem } from "./api/workItemsApi";
+import type { WorkItem, WorkItemStatus } from "./models/WorkItem";
+import {
+  getWorkItems,
+  createWorkItem,
+  deleteWorkItem,
+  updateWorkItem,
+} from "./api/workItemsApi";
 import { WorkItemsList } from "./components/WorkItemsList";
 import { CreateWorkItemForm } from "./components/CreateWorkItemForm";
 import { WorkItemsByStatusReportView } from "./components/WorkItemsByStatusReportView";
 import keycloak from "./auth/keycloak";
 
 function App() {
-  const [workItems, setWorkItems] = useState<WorkItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [activeView, setActiveView] = useState<"workItems" | "reporting">("workItems")
-  const [signOutError, setSignOutError] = useState<string | null>(null)
+  const [workItems, setWorkItems] = useState<WorkItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<"workItems" | "reporting">(
+    "workItems",
+  );
+  const [signOutError, setSignOutError] = useState<string | null>(null);
 
-  const username = keycloak.tokenParsed?.preferred_username ?? 'Unknown user'
+  const username = keycloak.tokenParsed?.preferred_username ?? "Unknown user";
 
   useEffect(() => {
-    let ignore = false
-
+    let ignore = false;
 
     async function loadWorkItems() {
       try {
-        const apiWorkItems = await getWorkItems()
+        const apiWorkItems = await getWorkItems();
 
         if (!ignore) {
-          setWorkItems(apiWorkItems)
+          setWorkItems(apiWorkItems);
         }
       } catch (error: unknown) {
         if (!ignore) {
           setErrorMessage(
             error instanceof Error
               ? error.message
-              : 'An unknown error occurred'
-          )
+              : "An unknown error occurred",
+          );
         }
       } finally {
         if (!ignore) {
-          setIsLoading(false)
+          setIsLoading(false);
         }
       }
     }
 
-    void loadWorkItems()
+    void loadWorkItems();
 
     return () => {
-      ignore = true
-    }
-  }, [])
+      ignore = true;
+    };
+  }, []);
 
   async function handleCreateWorkItem(title: string) {
-    const createdWorkItem = await createWorkItem({ title })
+    const createdWorkItem = await createWorkItem({ title });
 
-    setWorkItems(currentWorkItems => [
-      createdWorkItem,
-      ...currentWorkItems
-    ])
+    setWorkItems((currentWorkItems) => [createdWorkItem, ...currentWorkItems]);
   }
 
   async function handleDeleteWorkItem(id: string) {
-    await deleteWorkItem(id)
+    await deleteWorkItem(id);
 
-    setWorkItems(currentWorkItems =>
-      currentWorkItems.filter(workItem => workItem.id !== id)
-    )
+    setWorkItems((currentWorkItems) =>
+      currentWorkItems.filter((workItem) => workItem.id !== id),
+    );
   }
 
-  async function handleStatusChange(
-    id: string,
-    status: WorkItemStatus
-  ) {
-    const updatedWorkItem = await updateWorkItem(id, { status} )
+  async function handleStatusChange(id: string, status: WorkItemStatus) {
+    const updatedWorkItem = await updateWorkItem(id, { status });
 
-    setWorkItems(currentWorkItems =>
-      currentWorkItems.map(workItem =>
-        workItem.id === updatedWorkItem.id
-          ? updatedWorkItem
-          : workItem
-      )
-    )
+    setWorkItems((currentWorkItems) =>
+      currentWorkItems.map((workItem) =>
+        workItem.id === updatedWorkItem.id ? updatedWorkItem : workItem,
+      ),
+    );
   }
 
-    async function handleSignOut() {
-      setSignOutError(null)
+  async function handleSignOut() {
+    setSignOutError(null);
 
-      try {
-        await keycloak.logout({
-          redirectUri: window.location.origin,
-        })
-      } catch {
-        setSignOutError('Unable to sign out. Please try again.')
-      }
+    try {
+      await keycloak.logout({
+        redirectUri: window.location.origin,
+      });
+    } catch {
+      setSignOutError("Unable to sign out. Please try again.");
     }
+  }
 
   return (
     <main>
@@ -106,7 +104,6 @@ function App() {
             </button>
           </div>
         </div>
-
 
         {signOutError && <p role="alert">{signOutError}</p>}
 
@@ -159,6 +156,6 @@ function App() {
         <WorkItemsByStatusReportView />
       )}
     </main>
-  )
+  );
 }
-export default App
+export default App;
