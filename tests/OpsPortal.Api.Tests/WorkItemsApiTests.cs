@@ -16,6 +16,8 @@ public sealed class WorkItemsApiTests {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
 
         // Act - send an HTTP request
         // await - pause test until HTTP response arrives
@@ -38,6 +40,8 @@ public sealed class WorkItemsApiTests {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
 
         // Act - GetById
         var getResponse = await client.GetAsync($"/api/work-items/{Guid.NewGuid():N}");
@@ -53,6 +57,8 @@ public sealed class WorkItemsApiTests {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
 
         // Unique title - avoids collisions/accidental test overlap
         var title = $"Integration test item {Guid.NewGuid():N}";
@@ -96,6 +102,8 @@ public sealed class WorkItemsApiTests {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
 
         // Act - POST without title
         var createResponse = await client.PostAsJsonAsync(
@@ -113,6 +121,8 @@ public sealed class WorkItemsApiTests {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
 
         var title = $"Work Item to update {Guid.NewGuid():N}";
 
@@ -160,6 +170,8 @@ public sealed class WorkItemsApiTests {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
 
         // Act - PATCH contains empty body
         var patchResponse = await client.PatchAsJsonAsync(
@@ -176,6 +188,9 @@ public sealed class WorkItemsApiTests {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
+
         var title = $"Update Status Work Item {Guid.NewGuid():N}";
 
         var createResponse = await client.PostAsJsonAsync(
@@ -203,6 +218,8 @@ public sealed class WorkItemsApiTests {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
 
         // Act - PATCH with invalid or nonexistent id
         var patchResponse = await client.PatchAsJsonAsync(
@@ -219,6 +236,8 @@ public sealed class WorkItemsApiTests {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
 
         var title = $"Integration test item {Guid.NewGuid():N}";
 
@@ -251,6 +270,8 @@ public sealed class WorkItemsApiTests {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
 
         // Act
         var deleteResponse = await client.DeleteAsync($"/api/work-items/{Guid.NewGuid():N}");

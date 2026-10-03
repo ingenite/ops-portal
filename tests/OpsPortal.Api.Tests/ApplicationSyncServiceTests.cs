@@ -1,7 +1,5 @@
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using OpsPortal.Api.Data;
 using OpsPortal.Api.Integrations.Atlassian;
 using OpsPortal.Api.Models;
 using OpsPortal.Api.Synchronization;
@@ -14,7 +12,7 @@ public sealed class ApplicationSyncServiceTests {
 
     [Fact]
     public async Task Sync_inserts_mapped_rows_with_one_utc_timestamp() {
-        using var database = new SyncTestDatabase();
+        using var database = new TestDatabase();
         var before = DateTimeOffset.UtcNow;
 
         await Sync(database, new ProviderFake(Asset("22"), Asset("23")));
@@ -39,7 +37,7 @@ public sealed class ApplicationSyncServiceTests {
 
     [Fact]
     public async Task Repeated_sync_preserves_local_identity_and_refreshes_timestamp() {
-        using var database = new SyncTestDatabase();
+        using var database = new TestDatabase();
         var provider = new ProviderFake(Asset("22"));
         await Sync(database, provider);
         Guid originalId;
@@ -65,7 +63,7 @@ public sealed class ApplicationSyncServiceTests {
     [InlineData(null, null)]
     public async Task Sync_updates_descriptive_fields_including_cleared_values(
         string? deploymentMethod, string? status) {
-        using var database = new SyncTestDatabase();
+        using var database = new TestDatabase();
         var original = LocalApplication("22");
         await Seed(database, original);
 
@@ -85,7 +83,7 @@ public sealed class ApplicationSyncServiceTests {
 
     [Fact]
     public async Task Sync_does_not_match_same_object_id_in_another_workspace() {
-        using var database = new SyncTestDatabase();
+        using var database = new TestDatabase();
         var other = LocalApplication("22", "other-workspace");
         await Seed(database, other);
 
@@ -108,7 +106,7 @@ public sealed class ApplicationSyncServiceTests {
     [InlineData(false)]
     [InlineData(true)]
     public async Task Sync_preserves_rows_absent_from_empty_or_partial_response(bool includeIncoming) {
-        using var database = new SyncTestDatabase();
+        using var database = new TestDatabase();
         var original = LocalApplication("99");
         await Seed(database, original);
         var provider = includeIncoming ? new ProviderFake(Asset("22")) : new ProviderFake();
@@ -128,7 +126,7 @@ public sealed class ApplicationSyncServiceTests {
 
     [Fact]
     public async Task Provider_failure_leaves_persisted_data_unchanged() {
-        using var database = new SyncTestDatabase();
+        using var database = new TestDatabase();
         var original = LocalApplication("22");
         await Seed(database, original);
         var failure = new HttpRequestException("Fake provider failure");
@@ -148,7 +146,7 @@ public sealed class ApplicationSyncServiceTests {
 
     [Fact]
     public async Task Duplicate_source_ids_in_one_batch_create_only_one_row() {
-        using var database = new SyncTestDatabase();
+        using var database = new TestDatabase();
 
         await Sync(database, new ProviderFake(Asset("22"), Asset("22")));
 
@@ -159,7 +157,7 @@ public sealed class ApplicationSyncServiceTests {
 
     [Fact]
     public async Task Cancellation_reaches_provider_and_leaves_database_unchanged() {
-        using var database = new SyncTestDatabase();
+        using var database = new TestDatabase();
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
         var provider = new ProviderFake(Asset("22"));
@@ -172,7 +170,7 @@ public sealed class ApplicationSyncServiceTests {
         Assert.Empty(await verification.Applications.ToListAsync());
     }
 
-    private static async Task Sync(SyncTestDatabase database, IAtlassianAssetsClient provider,
+    private static async Task Sync(TestDatabase database, IAtlassianAssetsClient provider,
         CancellationToken cancellationToken = default) {
         using var context = database.CreateContext();
         var service = new ApplicationSyncService(provider,
@@ -180,7 +178,7 @@ public sealed class ApplicationSyncServiceTests {
         await service.SyncAsync(cancellationToken);
     }
 
-    private static async Task Seed(SyncTestDatabase database, Application application) {
+    private static async Task Seed(TestDatabase database, Application application) {
         using var context = database.CreateContext();
         context.Applications.Add(application);
         await context.SaveChangesAsync();
@@ -215,20 +213,4 @@ public sealed class ApplicationSyncServiceTests {
                 : Task.FromException<AtlassianAssetsQueryResponse>(Failure);
         }
     }
-}
-
-// One open connection owns one isolated database; every operation can use a fresh context.
-internal sealed class SyncTestDatabase : IDisposable {
-    private readonly SqliteConnection _connection = new("Data Source=:memory:");
-    private readonly DbContextOptions<OpsPortalDbContext> _options;
-
-    public SyncTestDatabase() {
-        _connection.Open();
-        _options = new DbContextOptionsBuilder<OpsPortalDbContext>().UseSqlite(_connection).Options;
-        using var context = CreateContext();
-        context.Database.EnsureCreated();
-    }
-
-    public OpsPortalDbContext CreateContext() => new(_options);
-    public void Dispose() => _connection.Dispose();
 }

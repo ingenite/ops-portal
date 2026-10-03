@@ -51,11 +51,12 @@ http://localhost:5096/swagger
 
 Swagger UI is available in the Development environment. It displays the generated OpenAPI contract and supports executing requests against the running API.
 
-The status-count report can also be checked from PowerShell:
-
-```powershell
-Invoke-RestMethod http://localhost:5096/api/reports/workItemStatus
-```
+All Work Items, Reporting, and Applications endpoints require a valid Keycloak
+access token. Requests without authentication return `401 Unauthorized`;
+authenticated callers without the required role receive `403 Forbidden`.
+Use the signed-in SPA to check Work Items and Reporting. Direct API requests
+must include a bearer access token with the appropriate role. See the
+[authorization role mapping](docs/authorization-role-mapping.md) for endpoint permissions.
 
 ### Build and Test
 
@@ -75,7 +76,7 @@ Invoke-RestMethod http://localhost:5096/api/reports/workItemStatus
 - **Database:** SQL Server running locally in Docker
 - **External services:** Personal development environments with fake data, plus local fakes for repeatable failure and concurrency scenarios
 - **Background processing (planned):** Synchronization and queued external updates with visible operation status
-- **Identity (planned):** OIDC sign-in and API-enforced authorization before external write-back
+- **Identity:** Keycloak OIDC sign-in, JWT bearer authentication, and API-enforced Reader/Admin authorization
 - **Tests:** Frontend unit tests and backend API/unit tests
 
 ## Implemented features
@@ -87,11 +88,14 @@ Invoke-RestMethod http://localhost:5096/api/reports/workItemStatus
 - Loading and error handling for frontend data requests.
 - Interactive API documentation through Swagger UI.
 - Backend API tests and frontend component tests, including report loading and display of zero counts.
+- Keycloak SPA sign-in and access-token refresh before Work Items and Reporting requests.
+- API authorization policies: Reader/Admin access for reads and Admin-only access for work item mutations and application synchronization.
+- Authorization integration tests for all eight endpoints, including proof that denied sync requests do not call the external provider.
 
 ## Planned features
 
-The next chapters focus on external integration, background synchronization,
-authentication and authorization, and coordinated write-back. See the
+Authentication and authorization are complete for the current endpoints.
+The next chapter focuses on coordinated external write-back. See the
 [learning roadmap](docs/roadmap.md) for the sequence, learning objectives, and
 open design choices.
 

@@ -14,7 +14,7 @@ namespace OpsPortal.Api.Tests;
 public sealed class ApplicationsApiTests {
     [Fact]
     public async Task Sync_returns_no_content_after_persisting_applications() {
-        using var database = new SyncTestDatabase();
+        using var database = new TestDatabase();
         using var factory = new OpsPortalApiFactory();
         using var applicationFactory = factory.WithWebHostBuilder(builder => {
             builder.ConfigureTestServices(services => {
@@ -30,6 +30,8 @@ public sealed class ApplicationsApiTests {
         using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
 
         using var response = await client.PostAsync("/api/applications/sync", null);
 
@@ -43,7 +45,7 @@ public sealed class ApplicationsApiTests {
 
     [Fact]
     public async Task Manual_sync_returns_409_Conflict_while_the_gate_is_held() {
-        using var database = new SyncTestDatabase();
+        using var database = new TestDatabase();
         using var factory = new OpsPortalApiFactory();
         var provider = new FailingAtlassianAssetsClient("Private fake provider diagnostic");
         using var applicationFactory = factory.WithWebHostBuilder(builder => {
@@ -57,6 +59,8 @@ public sealed class ApplicationsApiTests {
         using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
 
         var coordinator = applicationFactory.Services.GetRequiredService<ApplicationSyncCoordinator>();
         Assert.True(await coordinator.TryEnterAsync(CancellationToken.None));
@@ -71,7 +75,7 @@ public sealed class ApplicationsApiTests {
     [Fact]
     public async Task Sync_returns_bad_gateway_without_exposing_provider_diagnostics() {
         const string providerError = "Private fake provider diagnostic";
-        using var database = new SyncTestDatabase();
+        using var database = new TestDatabase();
         using var factory = new OpsPortalApiFactory();
         using var applicationFactory = factory.WithWebHostBuilder(builder => {
             builder.ConfigureTestServices(services => {
@@ -84,6 +88,8 @@ public sealed class ApplicationsApiTests {
         using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
 
         using var response = await client.PostAsync("/api/applications/sync", null);
 
@@ -102,7 +108,7 @@ public sealed class ApplicationsApiTests {
 
     [Fact]
     public async Task GetAll_returns_stored_rows_for_configured_workspace_with_freshness() {
-        using var database = new SyncTestDatabase();
+        using var database = new TestDatabase();
         var stored = StoredApplication("22", "Demo CRM");
         using (var context = database.CreateContext()) {
             var other = StoredApplication("22", "Other workspace CRM");
@@ -110,12 +116,16 @@ public sealed class ApplicationsApiTests {
             context.Applications.AddRange(stored, other);
             await context.SaveChangesAsync();
         }
+
         using var factory = new OpsPortalApiFactory();
-        using var applicationFactory = WithDatabase(factory, database,
+        using var applicationFactory = factory.WithDatabase(database,
             new FakeAtlassianAssetsClient(new AtlassianAssetsQueryResponse()));
+
         using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
 
         using var response = await client.GetAsync("/api/applications");
 
@@ -134,15 +144,17 @@ public sealed class ApplicationsApiTests {
 
     [Fact]
     public async Task GetAll_returns_empty_array_when_database_is_empty_even_if_provider_has_assets() {
-        using var database = new SyncTestDatabase();
+        using var database = new TestDatabase();
         using var factory = new OpsPortalApiFactory();
-        using var applicationFactory = WithDatabase(factory, database,
+        using var applicationFactory = factory.WithDatabase(database,
             new FakeAtlassianAssetsClient(new AtlassianAssetsQueryResponse {
                 Values = [new() { Id = "22", ObjectKey = "APM-22", Label = "Provider-only CRM" }]
             }));
         using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
 
         using var response = await client.GetAsync("/api/applications");
 
@@ -155,18 +167,22 @@ public sealed class ApplicationsApiTests {
 
     [Fact]
     public async Task GetAll_returns_stored_rows_without_calling_failing_provider() {
-        using var database = new SyncTestDatabase();
+        using var database = new TestDatabase();
         var stored = StoredApplication("22", "Stored CRM");
         using (var context = database.CreateContext()) {
             context.Applications.Add(stored);
             await context.SaveChangesAsync();
         }
+
         var provider = new FailingAtlassianAssetsClient("Private fake provider diagnostic");
         using var factory = new OpsPortalApiFactory();
-        using var applicationFactory = WithDatabase(factory, database, provider);
+        using var applicationFactory = factory.WithDatabase(database, provider);
+
         using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
 
         using var response = await client.GetAsync("/api/applications");
 
@@ -181,7 +197,7 @@ public sealed class ApplicationsApiTests {
 
     [Fact]
     public async Task GetAll_orders_by_name_then_object_id_and_preserves_null_fields() {
-        using var database = new SyncTestDatabase();
+        using var database = new TestDatabase();
         var nullableApplication = StoredApplication("20", "Alpha");
         nullableApplication.DeploymentMethod = null;
         nullableApplication.Status = null;
@@ -192,12 +208,16 @@ public sealed class ApplicationsApiTests {
                 nullableApplication);
             await context.SaveChangesAsync();
         }
+
         using var factory = new OpsPortalApiFactory();
-        using var applicationFactory = WithDatabase(factory, database,
+        using var applicationFactory = factory.WithDatabase(database,
             new FakeAtlassianAssetsClient(new AtlassianAssetsQueryResponse()));
+
         using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions {
             BaseAddress = new Uri("https://localhost")
         });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
 
         using var response = await client.GetAsync("/api/applications");
 
@@ -234,32 +254,6 @@ public sealed class ApplicationsApiTests {
             CallCount++;
             return Task.FromException<AtlassianAssetsQueryResponse>(
                 new HttpRequestException(_message, null, HttpStatusCode.Forbidden));
-        }
-    }
-
-    private static WebApplicationFactory<Program> WithDatabase(
-        OpsPortalApiFactory factory,
-        SyncTestDatabase database,
-        IAtlassianAssetsClient provider) {
-        return factory.WithWebHostBuilder(builder => {
-            builder.ConfigureTestServices(services => {
-                services.RemoveAll<OpsPortalDbContext>();
-                services.AddScoped<OpsPortalDbContext>(_ => database.CreateContext());
-                services.RemoveAll<IAtlassianAssetsClient>();
-                services.AddSingleton<IAtlassianAssetsClient>(provider);
-            });
-        });
-    }
-    private sealed class FakeAtlassianAssetsClient : IAtlassianAssetsClient {
-        private readonly AtlassianAssetsQueryResponse _response;
-
-        public FakeAtlassianAssetsClient(AtlassianAssetsQueryResponse response) {
-            _response = response;
-        }
-
-        public Task<AtlassianAssetsQueryResponse> GetApplicationsAsync(
-            CancellationToken cancellationToken) {
-            return Task.FromResult(_response);
         }
     }
 }

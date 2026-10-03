@@ -48,21 +48,28 @@ Decide whether the worker initially runs in the API host or a separate process.
 Checkpoint: synchronization runs without a browser request, failures are visible,
 and shutdown and overlapping runs have defined behavior.
 
-## 4. Add authentication and authorization
+## 4. Add authentication and authorization (complete)
 
-Introduce OIDC sign-in and API-enforced permissions before external write-back.
-Select a personal identity provider when starting this chapter; Auth0 and
-Keycloak are candidates. Choose the browser session/token approach explicitly
-rather than assuming it from the existing backend-for-frontend terminology.
+Implemented Keycloak OIDC sign-in in the SPA and JWT bearer authentication in
+the API. The browser refreshes its access token before Work Items and Reporting
+requests. The API maps Keycloak realm roles to role claims and applies `CanRead`
+(Reader or Admin) and `CanWrite` (Admin) policies across all eight endpoints.
 
-Learn the application side of OIDC/OAuth2, token or session validation, claims,
-and authorization policies. Start with Reader and Editor permissions. Separate
-the user's right to request an operation from the worker's credentials and
-permissions at the external provider.
+This chapter covered the application side of OIDC/OAuth2, token validation,
+claims, and authorization policies. User authorization remains separate from
+the background worker's credentials and permissions at the external provider.
 
-Checkpoint: an unauthenticated caller cannot access protected endpoints, a
-Reader can read but cannot perform an Editor-only operation, and the API enforces
-these rules independently of which controls React displays.
+Checkpoint completed: anonymous callers receive `401`, authenticated callers
+without an allowed role receive `403`, Readers can read, and only Admins can
+mutate work items or request application synchronization. The API enforces these
+rules independently of which controls React displays.
+
+Integration tests cover all four caller cases on every endpoint and verify that
+denied sync requests make no provider calls. Manual SPA checks verified the real
+Keycloak flow for Work Items and Reporting. Test authentication substitutes for
+JWT validation in integration tests; it does not exercise real token validation
+or Keycloak realm-role mapping. See the
+[authorization role mapping](authorization-role-mapping.md) for details.
 
 ## 5. Coordinate external write-back
 

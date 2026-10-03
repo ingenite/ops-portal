@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -6,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
+using OpsPortal.Api.Data;
+using OpsPortal.Api.Integrations.Atlassian;
 using OpsPortal.Api.Storage;
 using OpsPortal.Api.Synchronization;
 
@@ -39,6 +42,30 @@ public sealed class OpsPortalApiFactory : WebApplicationFactory<Program> {
             if (worker is not null) {
                 services.Remove(worker);
             }
+
+            services.AddAuthentication(options => {
+               options.DefaultAuthenticateScheme = "Test";
+               options.DefaultChallengeScheme = "Test";
+               options.DefaultForbidScheme = "Test";
+            })
+            .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                "Test",
+                options => { });
+        });
+    }
+
+    internal WebApplicationFactory<Program> WithDatabase(
+        TestDatabase database,
+        IAtlassianAssetsClient? provider) {
+        return WithWebHostBuilder(builder => {
+            builder.ConfigureTestServices(services => {
+                services.RemoveAll<OpsPortalDbContext>();
+                services.AddScoped<OpsPortalDbContext>(_ => database.CreateContext());
+                if (provider is not null) {
+                    services.RemoveAll<IAtlassianAssetsClient>();
+                    services.AddSingleton<IAtlassianAssetsClient>(provider);
+                }
+            });
         });
     }
 }
