@@ -56,7 +56,7 @@ public sealed class OpsPortalApiFactory : WebApplicationFactory<Program> {
 
     internal WebApplicationFactory<Program> WithDatabase(
         TestDatabase database,
-        IAtlassianAssetsClient? provider) {
+        IAtlassianAssetsClient? provider = null) {
         return WithWebHostBuilder(builder => {
             builder.ConfigureTestServices(services => {
                 services.RemoveAll<OpsPortalDbContext>();

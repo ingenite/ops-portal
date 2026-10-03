@@ -23,11 +23,11 @@ export function CreateWorkItemForm({ onCreate }: CreateWorkItemFormProps) {
         try {
             await onCreate(trimmedTitle)
             setTitle("")
-        } catch (error:unknown) {
+        } catch (error: unknown) {
             setErrorMessage(
                 error instanceof Error
-                ? error.message
-                : 'An unknown error occurred'
+                    ? error.message
+                    : 'An unknown error occurred'
             )
         } finally {
             setIsSubmitting(false)
@@ -35,23 +35,34 @@ export function CreateWorkItemForm({ onCreate }: CreateWorkItemFormProps) {
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            <label>New WorkItem Title:
-                <input
-                    type= "text"
-                    value={title}
-                    onChange={e => setTitle(e.target.value)}
+        <form className="create-work-item-form" onSubmit={handleSubmit}>
+            <div className="create-work-item-fields">
+
+
+                <label className="title-field">
+                    <span>New WorkItem Title:</span>
+                    <input
+                        type="text"
+                        value={title}
+                        onChange={e => setTitle(e.target.value)}
+                        disabled={isSubmitting}
+                    />
+                </label>
+
+
+
+                <button
+                    className="primary-button"
+                    type="submit"
                     disabled={isSubmitting}
-                />
-            </label>
+                >
+                    {isSubmitting ? "Creating..." : "Create"}
+                </button>
+            </div>
 
             {errorMessage && (
                 <p role="alert">{errorMessage}</p>
             )}
-
-            <button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Creating..." : "Create"}
-            </button>
         </form>
     )
 }

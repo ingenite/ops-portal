@@ -61,63 +61,65 @@ export function WorkItemsList({
             {errorMessage && (
                 <p role="alert">{errorMessage}</p>
             )}
-            <table>
-                <caption>Work Items</caption>
+            <div className="table-container">
+                <table className="data-table work-items-table">
+                    <caption>Work Items</caption>
 
-                <thead>
-                    <tr>
-                        <th scope="col">Title</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Actions</th>
-                    </tr>
-
-                </thead>
-
-                <tbody>
-                    {workItems.map((workItem) => (
-                        <tr key={workItem.id}>
-                            <td>{workItem.title}</td>
-                            <td>
-                                <select
-                                    value={workItem.status}
-                                    onChange={(event) =>
-                                        void handleStatusUpdate(
-                                            workItem.id,
-                                            event.currentTarget.value as WorkItemStatus
-                                        )
-                                    }
-                                    disabled={updatingStatusId !== null}
-                                    aria-label={
-                                        updatingStatusId === workItem.id
-                                            ? `Updating status for ${workItem.title}`
-                                            : `Status for ${workItem.title}`
-                                    }
-                                >
-                                    <option value="Open">Open</option>
-                                    <option value="InProgress">In Progress</option>
-                                    <option value="Completed">Completed</option>
-                                </select>
-                            </td>
-                            <td>
-                                <button
-                                    type="button"
-                                    onClick={() => void handleDelete(workItem.id)}
-                                    disabled={deletingId !== null}
-                                    aria-label={
-                                        deletingId === workItem.id
-                                            ? `Deleting ${workItem.title}`
-                                            : `Delete ${workItem.title}`
-                                    }
-                                >
-                                    {deletingId === workItem.id
-                                        ? `Deleting...`
-                                        : `Delete`}
-                                </button>
-                            </td>
+                    <thead>
+                        <tr>
+                            <th scope="col">Title</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Actions</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+
+                    </thead>
+
+                    <tbody>
+                        {workItems.map((workItem) => (
+                            <tr key={workItem.id}>
+                                <td>{workItem.title}</td>
+                                <td>
+                                    <select
+                                        value={workItem.status}
+                                        onChange={(event) =>
+                                            void handleStatusUpdate(
+                                                workItem.id,
+                                                event.currentTarget.value as WorkItemStatus
+                                            )
+                                        }
+                                        disabled={updatingStatusId !== null}
+                                        aria-label={
+                                            updatingStatusId === workItem.id
+                                                ? `Updating status for ${workItem.title}`
+                                                : `Status for ${workItem.title}`
+                                        }
+                                    >
+                                        <option value="Open">Open</option>
+                                        <option value="InProgress">In Progress</option>
+                                        <option value="Completed">Completed</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <button
+                                        type="button"
+                                        onClick={() => void handleDelete(workItem.id)}
+                                        disabled={deletingId !== null}
+                                        aria-label={
+                                            deletingId === workItem.id
+                                                ? `Deleting ${workItem.title}`
+                                                : `Delete ${workItem.title}`
+                                        }
+                                    >
+                                        {deletingId === workItem.id
+                                            ? `Deleting...`
+                                            : `Delete`}
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </>
     )
 }

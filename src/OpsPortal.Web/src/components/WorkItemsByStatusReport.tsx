@@ -9,23 +9,25 @@ export function WorkItemsByStatusReport({
 }: WorkItemsByStatusReportProps) {
 
     return (
-        <table>
-            <caption>Work Items Status Report</caption>
+        <div className="table-container">
+            <table className="data-table">
+                <caption>Work Items Status Report</caption>
 
-            <thead>
-                <tr>
-                    <th scope="col">Status</th>
-                    <th scope="col">Count</th>
-                </tr>
-            </thead>
-            <tbody>
-                {rows.map((row) => (
-                    <tr key={row.status}>
-                        <td>{row.status}</td>
-                        <td>{row.count}</td>
+                <thead>
+                    <tr>
+                        <th scope="col">Status</th>
+                        <th scope="col" className="numeric-cell">Count</th>
                     </tr>
-                ))}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {rows.map((row) => (
+                        <tr key={row.status}>
+                            <td>{row.status}</td>
+                            <td className="numeric-cell">{row.count}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
     )
 }

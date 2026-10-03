@@ -94,33 +94,40 @@ function App() {
 
   return (
     <main>
-      <h1>OpsPortal</h1>
+      <header className="app-header">
+        <div className="app-header-row">
+          <h1>OpsPortal</h1>
 
-      <p>Signed in as {username}</p>
+          <div className="account-controls">
+            <span>Signed in as {username}</span>
 
-      <button type="button" onClick={handleSignOut}>
-        Sign out
-      </button>
+            <button type="button" onClick={handleSignOut}>
+              Sign out
+            </button>
+          </div>
+        </div>
 
-      {signOutError && <p role="alert">{signOutError}</p>}
 
-      <nav aria-label="Main">
-        <button
-          type="button"
-          onClick={() => setActiveView("workItems")}
-          aria-pressed={activeView === "workItems"}
-        >
-          Work Items
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveView("reporting")}
-          aria-pressed={activeView === "reporting"}
-        >
-          Reporting
-        </button>
-      </nav>
+        {signOutError && <p role="alert">{signOutError}</p>}
 
+        <nav className="main-nav" aria-label="Main">
+          <button
+            type="button"
+            onClick={() => setActiveView("workItems")}
+            aria-pressed={activeView === "workItems"}
+          >
+            Work Items
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveView("reporting")}
+            aria-pressed={activeView === "reporting"}
+          >
+            Reporting
+          </button>
+        </nav>
+      </header>
       {activeView === "workItems" ? (
         <>
           <h2>Work Items</h2>
@@ -131,7 +138,7 @@ function App() {
             <p role="alert">{errorMessage}</p>
           ) : (
             <>
-              <section>
+              <section className="create-work-item">
                 <h3>Create New Work Item</h3>
                 <CreateWorkItemForm onCreate={handleCreateWorkItem} />
               </section>
@@ -143,7 +150,7 @@ function App() {
                   workItems={workItems}
                   onDelete={handleDeleteWorkItem}
                   onStatusChange={handleStatusChange}
-              />
+                />
               )}
             </>
           )}
