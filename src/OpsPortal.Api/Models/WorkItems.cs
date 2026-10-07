@@ -11,4 +11,7 @@ public sealed class WorkItem
     public DateTimeOffset CreatedAtUtc { get; init; }
 
     public DateTimeOffset UpdatedAtUtc { get; set; }
+
+    // Atlassian Assets "Application"
+    public Guid? ApplicationId { get; set; }
 }

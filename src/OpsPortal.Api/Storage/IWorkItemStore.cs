@@ -8,7 +8,7 @@ public interface IWorkItemStore
 
     Task<WorkItem?> GetByIdAsync(Guid id);
 
-    Task<WorkItem> CreateAsync(string title);
+    Task<WorkItem> CreateAsync(string title, Guid? applicationId = null);
 
     Task<WorkItem?> UpdateAsync(Guid id, string? title, string? status);
 

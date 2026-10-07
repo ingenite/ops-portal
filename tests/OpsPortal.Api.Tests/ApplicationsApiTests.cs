@@ -157,8 +157,9 @@ public sealed class ApplicationsApiTests
         Assert.Equal("Demo CRM", row.GetProperty("name").GetString());
         Assert.Equal("Cloud", row.GetProperty("deploymentMethod").GetString());
         Assert.Equal("Test", row.GetProperty("status").GetString());
+        Assert.Equal(stored.Id.ToString(), row.GetProperty("id").GetString());
         Assert.Equal(stored.LastSyncedAtUtc, row.GetProperty("lastSyncedAtUtc").GetDateTimeOffset());
-        Assert.Equal(6, row.EnumerateObject().Count());
+        Assert.Equal(7, row.EnumerateObject().Count());
     }
 
     [Fact]

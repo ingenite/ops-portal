@@ -40,6 +40,12 @@ public sealed class OpsPortalDbContext : DbContext
         workItem.Property(item => item.UpdatedAtUtc)
             .IsRequired();
 
+        workItem.HasOne<Application>()
+            .WithMany()
+            .HasForeignKey(item => item.ApplicationId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // Atlassian Assets - Application
         var application = modelBuilder.Entity<Application>();
 

@@ -73,6 +73,9 @@ namespace OpsPortal.Api.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("ApplicationId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
@@ -91,7 +94,17 @@ namespace OpsPortal.Api.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ApplicationId");
+
                     b.ToTable("WorkItems", (string)null);
+                });
+
+            modelBuilder.Entity("OpsPortal.Api.Models.WorkItem", b =>
+                {
+                    b.HasOne("OpsPortal.Api.Models.Application", null)
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 #pragma warning restore 612, 618
         }

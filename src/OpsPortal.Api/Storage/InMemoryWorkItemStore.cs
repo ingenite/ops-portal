@@ -9,16 +9,16 @@ public sealed class InMemoryWorkItemStore : IWorkItemStore
 
     public InMemoryWorkItemStore()
     {
-        CreateWorkItem("Review integration documentation");
-        CreateWorkItem("Design the reporting page");
+        CreateWorkItem("Review integration documentation", null);
+        CreateWorkItem("Design the reporting page", null);
     }
 
-    public Task<WorkItem> CreateAsync(string title)
+    public Task<WorkItem> CreateAsync(string title, Guid? applicationId)
     {
-        return Task.FromResult(CreateWorkItem(title));
+        return Task.FromResult(CreateWorkItem(title, applicationId));
     }
 
-    private WorkItem CreateWorkItem(string title)
+    private WorkItem CreateWorkItem(string title, Guid? applicationId)
     {
         var now = DateTimeOffset.UtcNow;
 
@@ -28,7 +28,8 @@ public sealed class InMemoryWorkItemStore : IWorkItemStore
             Title = title.Trim(),
             Status = "Open",
             CreatedAtUtc = now,
-            UpdatedAtUtc = now
+            UpdatedAtUtc = now,
+            ApplicationId = applicationId
         };
 
         lock (_syncRoot)

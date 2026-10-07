@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
 
 using OpsPortal.Api.Contracts;
 using OpsPortal.Api.Models;
 using OpsPortal.Api.Storage;
+using OpsPortal.Api.Data;
+using OpsPortal.Api.Integrations.Atlassian;
 
 namespace OpsPortal.Api.Controllers;
 
@@ -12,10 +15,16 @@ namespace OpsPortal.Api.Controllers;
 public sealed class WorkItemsController : ControllerBase
 {
     private readonly IWorkItemStore _workItemStore;
+    private readonly ApplicationQuery _applicationQuery;
+    private readonly IOptions<AtlassianOptions> _options;
 
-    public WorkItemsController(IWorkItemStore workItemStore)
+    public WorkItemsController(IWorkItemStore workItemStore,
+        ApplicationQuery applicationQuery,
+        IOptions<AtlassianOptions> options)
     {
         _workItemStore = workItemStore;
+        _applicationQuery = applicationQuery;
+        _options = options;
     }
 
     [HttpGet]
@@ -38,9 +47,31 @@ public sealed class WorkItemsController : ControllerBase
 
     [HttpPost]
     [Authorize(Policy = "CanWrite")]
-    public async Task<ActionResult<WorkItem>> Create(CreateWorkItemRequest request)
+    public async Task<ActionResult<WorkItem>> Create(
+        CreateWorkItemRequest request,
+        CancellationToken cancellationToken)
     {
-        var workItem = await _workItemStore.CreateAsync(request.Title!);
+        if (request.ApplicationId.HasValue)
+        {
+            var applicationExists = await _applicationQuery.ApplicationExists(
+                request.ApplicationId.Value,
+                _options.Value.WorkspaceId,
+                cancellationToken);
+
+            if (!applicationExists)
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Title = "Invalid Application selection",
+                    Detail = "The selected Application does not exist in the configured workspace.",
+                    Status = StatusCodes.Status400BadRequest
+                });
+            }
+        }
+
+        var workItem = await _workItemStore.CreateAsync(
+            request.Title!,
+            request.ApplicationId);
 
         return CreatedAtAction(
             nameof(GetById),

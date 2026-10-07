@@ -14,7 +14,7 @@ public sealed class SqlWorkItemStore : IWorkItemStore
         _dbContext = dbContext;
     }
 
-    public async Task<WorkItem> CreateAsync(string title)
+    public async Task<WorkItem> CreateAsync(string title, Guid? applicationId)
     {
         var now = DateTimeOffset.UtcNow;
 
@@ -24,7 +24,8 @@ public sealed class SqlWorkItemStore : IWorkItemStore
             Title = title.Trim(),
             Status = "Open",
             CreatedAtUtc = now,
-            UpdatedAtUtc = now
+            UpdatedAtUtc = now,
+            ApplicationId = applicationId
         };
 
         _dbContext.WorkItems.Add(workItem);

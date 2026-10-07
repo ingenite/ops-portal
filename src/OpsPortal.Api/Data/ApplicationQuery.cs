@@ -28,10 +28,22 @@ public sealed class ApplicationQuery
                 Name = app.Name,
                 DeploymentMethod = app.DeploymentMethod,
                 Status = app.Status,
-                LastSyncedAtUtc = app.LastSyncedAtUtc
+                LastSyncedAtUtc = app.LastSyncedAtUtc,
+                Id = app.Id
             })
             .ToArrayAsync(cancellationToken);
 
         return applications;
+    }
+
+    public async Task<bool> ApplicationExists(
+        Guid applicationId,
+        string workspaceId,
+        CancellationToken cancellationToken
+    )
+    {
+        return await _dbContext.Applications.AnyAsync(
+            app => app.Id == applicationId && app.WorkspaceId == workspaceId,
+            cancellationToken);
     }
 }

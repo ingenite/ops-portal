@@ -15,4 +15,7 @@ public sealed class ApplicationListRow
     public string? Status { get; set; }
 
     public DateTimeOffset LastSyncedAtUtc { get; set; }
+
+    // Relational key to join WorkItems
+    public Guid Id { get; set; }
 }
