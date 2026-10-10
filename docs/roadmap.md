@@ -13,40 +13,70 @@ blocks progress, use a focused example and explanation. Testing accompanies
 meaningful behavior changes, with depth balanced against the current lesson.
 
 The Work Items CRUD and initial status-count reporting slices are complete.
-The following chapters extend that foundation. This is a learning sequence,
-not a commitment to a particular queue product, identity provider, or deployment
-topology.
+Chapters 1-4 describe implemented milestones and their current limits; chapter 5
+is future work. This is a learning sequence, not a commitment to a particular
+queue product or deployment topology.
 
-## 1. Read from an external provider
+## 1. Read from an external provider (complete)
 
-Validate a personal Atlassian demo development site as a possible source.
-Confirm Assets availability, suitable fake records, API access, and environment
-expiry before depending on it. The exact dataset remains open.
+Implemented a server-side Atlassian Assets client for application records in a
+personal development environment with fake data. Provider response types and a
+mapper translate the external schema into application-owned fields. Provider
+credentials remain on the server.
 
-Build one small read path through the ASP.NET Core API. Learn outbound HTTP,
-configuration, provider response types, and mapping into application-owned
-response shapes. Keep provider credentials on the server.
+This chapter covered outbound HTTP, configuration, JSON deserialization, and
+mapping across the provider/application boundary. The current client reads one
+bounded page; pagination remains outside the implemented read path.
 
-Checkpoint: a bounded set of fake external records can be read through OpsPortal
-and checked against the source. Keep a local fake available for controlled tests.
+Checkpoint completed: provider reads feed application synchronization through
+the API. Tests cover the HTTP request, deserialization, and mapping with fake
+responses. Test fakes support controlled scenarios; a runnable local fake-provider
+mode for visitors remains future work.
 
-## 2. Persist a synchronized copy
+## 2. Persist a synchronized copy (complete)
 
-Store external records in SQL Server using stable external identifiers. Learn
-repeatable imports, source-to-local mapping, and freshness information. Establish
-which system owns each field and what the local copy represents.
+Implemented application storage through EF Core and SQL Server. Synchronization
+matches records by workspace and external object ID, preserves local identity,
+updates descriptive fields, and assigns one UTC refresh timestamp to each
+imported batch. Records absent from a later response remain stored with their
+previous refresh timestamp.
 
-Checkpoint: repeating an import updates the same records without creating
-duplicates, and the application can show when its local data was refreshed.
+`GET /api/applications` reads the stored copy for the configured workspace and
+includes each record's local ID and `lastSyncedAtUtc`. Reads do not call the
+provider, so previously synchronized data remains available during a provider
+failure. Work item creation accepts an optional local `applicationId`, validated
+against that workspace. An Applications view and application selection in the
+React interface remain future work.
 
-## 3. Introduce background synchronization
+This chapter covered repeatable imports, source-to-local mapping, relational
+identity, and freshness. Checkpoint completed: tests verify that repeated imports
+preserve local IDs without creating duplicates, update mapped values and
+timestamps, isolate workspaces, and preserve records absent from the response.
+API tests verify stored reads and manual synchronization. These tests use SQLite
+and fake providers; they do not verify SQL Server migrations or live Atlassian
+behavior.
 
-Move the import operation into background processing. Learn worker lifetimes,
-dependency scopes, cancellation, logging, and how to prevent unintended overlap.
-Decide whether the worker initially runs in the API host or a separate process.
+## 3. Introduce background synchronization (implemented; recovery incomplete)
 
-Checkpoint: synchronization runs without a browser request, failures are visible,
-and shutdown and overlapping runs have defined behavior.
+Implemented an optional background worker in the API host, enabled through
+`ApplicationSync:Enabled`. It attempts synchronization immediately and on a
+five-minute timer, creates a fresh dependency scope for each acquired run, and
+passes the shutdown cancellation token into synchronization.
+
+Manual and background runs share a coordinator within one API process. A manual
+request receives `409 Conflict` when the gate is held; the worker skips an attempt
+when another run holds the gate. Both paths release an acquired gate in `finally`.
+This coordination does not extend across multiple API instances.
+
+This chapter covered worker lifetimes, dependency scopes, cancellation, logging,
+and overlap protection. The scheduling and coordination milestone is implemented;
+tests cover gate acquisition/release and manual-sync conflict behavior.
+
+Remaining checkpoint: define and verify recovery after broader failures. The
+worker currently logs HTTP request failures and continues to later runs, but
+deserialization and database failures can escape and stop the host. Worker
+recovery and shutdown need focused coverage before this chapter's original
+resilience checkpoint is complete.
 
 ## 4. Add authentication and authorization (complete)
 
@@ -97,10 +127,12 @@ the request or apply an unintended duplicate effect.
 - The application API validates requests and enforces user authorization.
 - Provider-specific integration code handles external API communication.
 - The data layer handles SQL persistence and queries.
-- Background processing performs synchronization and queued operations through
-  those integration and persistence capabilities.
-- Reports read the local synchronized copy; operation status explains work that
-  has not yet been reflected in that copy.
+- Background processing currently performs synchronization through the
+  integration and persistence capabilities. Queued operations are planned in
+  chapter 5.
+- The current status-count report reads stored work items, and the Applications
+  API reads the local synchronized copy. Future operation status will explain
+  queued work that has not yet been reflected in that copy.
 
 These boundaries extend [ADR 0001](adr/0001-use-a-backend-for-frontend.md).
 Record concrete decisions about identity integration, queue persistence, or

@@ -58,10 +58,6 @@ Use the signed-in SPA to check Work Items and Reporting. Direct API requests
 must include a bearer access token with the appropriate role. See the
 [authorization role mapping](docs/authorization-role-mapping.md) for endpoint permissions.
 
-### Build and Test
-
-> Coming soon - Powershell script accepting various common args
-
 ## Goals
 
 - Build a single-page application that reads and updates data through REST APIs.
@@ -69,13 +65,13 @@ must include a bearer access token with the appropriate role. See the
 - Practice a clean separation between browser, API, external integrations, and database access.
 - Learn an end-to-end development workflow: planning, implementation, testing, containers, CI, and release.
 
-## Planned architecture
+## Current architecture
 
 - **Frontend:** React and TypeScript single-page application
 - **Backend:** ASP.NET Core Web API
 - **Database:** SQL Server running locally in Docker
-- **External services:** Personal development environments with fake data, plus local fakes for repeatable failure and concurrency scenarios
-- **Background processing (planned):** Synchronization and queued external updates with visible operation status
+- **External services:** Live Atlassian Assets API in a personal development environment containing synthetic application records; local provider fakes for automated tests
+- **Background processing:** Optional application synchronization in the API host, with shared coordination for manual and scheduled runs
 - **Identity:** Keycloak OIDC sign-in, JWT bearer authentication, and API-enforced Reader/Admin authorization
 - **Tests:** Frontend unit tests and backend API/unit tests
 
@@ -83,6 +79,11 @@ must include a bearer access token with the appropriate role. See the
 
 - Work Items API and React interface for listing, creating, deleting, and updating work item status.
 - SQL Server persistence through Entity Framework Core.
+- Server-side Atlassian Assets integration for importing application records from a personal development environment with fake data.
+- Repeatable application synchronization that preserves local identity, updates descriptive fields, and records the last successful refresh time for each imported record.
+- Applications API for reading the stored copy and requesting manual synchronization. Stored reads do not depend on a successful provider request.
+- Optional background synchronization with an initial run and a five-minute interval. Manual and background runs share overlap protection within one API process.
+- Optional application associations when creating work items through the API, validated against the configured workspace. Application selection and an Applications view remain pending in the React interface.
 - Database-backed status-count report displayed in a semantic table.
 - Navigation between Work Items and Reporting. Opening Reporting fetches current counts.
 - Loading and error handling for frontend data requests.
@@ -92,15 +93,21 @@ must include a bearer access token with the appropriate role. See the
 - API authorization policies: Reader/Admin access for reads and Admin-only access for work item mutations and application synchronization.
 - Authorization integration tests for all eight endpoints, including proof that denied sync requests do not call the external provider.
 
+The application import currently reads one bounded provider page and retains
+stored records absent from later responses. Worker recovery currently handles
+HTTP request failures; broader failure recovery remains unfinished. The
+[learning roadmap](docs/roadmap.md) describes these milestones and remaining work.
+
 ## Planned features
 
-Authentication and authorization are complete for the current endpoints.
-The next chapter focuses on coordinated external write-back. See the
-[learning roadmap](docs/roadmap.md) for the sequence, learning objectives, and
-open design choices.
+The next learning chapter focuses on coordinated external write-back: queued
+updates, visible operation status, retries, and reconciliation with synchronized
+data. These capabilities are planned. See the [learning roadmap](docs/roadmap.md)
+for the sequence, learning objectives, and open design choices.
 
-Summary cards, charts, navigation for multiple reports, and CSS/UI-framework
-work remain later topics.
+Applications UI integration and work item application selection remain planned.
+Summary cards, charts, navigation for multiple reports, and CSS/UI-framework work
+remain later topics.
 
 ## Non-goals
 
