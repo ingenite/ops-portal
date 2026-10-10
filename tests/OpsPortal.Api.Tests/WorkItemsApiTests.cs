@@ -177,6 +177,46 @@ public sealed class WorkItemsApiTests
     }
 
     [Fact]
+    public async Task Update_title_does_not_modify_status()
+    {
+        // Arrange
+        using var factory = new OpsPortalApiFactory();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost")
+        });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
+
+        var title = $"Work Item to update {Guid.NewGuid():N}";
+
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/work-items",
+            new { title });
+
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+
+        var created = await createResponse.Content.ReadFromJsonAsync<WorkItem>();
+
+        Assert.NotNull(created);
+
+        // Act - PATCH
+        var patchResponse = await client.PatchAsJsonAsync(
+            $"/api/work-items/{created.Id}",
+            new { title = "Updated Title" });
+
+        Assert.Equal(HttpStatusCode.OK, patchResponse.StatusCode);
+
+        // Assert - Title is updated, Status is not updated
+        var updated = await patchResponse.Content.ReadFromJsonAsync<WorkItem>();
+
+        Assert.NotNull(updated);
+        Assert.Equal(created.Id, updated.Id);
+        Assert.NotEqual(title, updated.Title);
+        Assert.Equal(created.Status, updated.Status);
+    }
+
+    [Fact]
     public async Task Update_with_no_fields_returns_bad_request()
     {
         // Arrange
@@ -248,6 +288,59 @@ public sealed class WorkItemsApiTests
         // Assert - HTTP/404 Not Found
         Assert.Equal(HttpStatusCode.NotFound, patchResponse.StatusCode);
     }
+
+    [Theory]
+    [InlineData("title", "")]
+    [InlineData("title", "  ")]
+    [InlineData("status", "")]
+    [InlineData("status", "  ")]
+    public async Task Update_returns_bad_request_when_empty_or_whitespace_value_provided(
+        string field,
+        string invalidValue
+    )
+    {
+        // Arrange
+        using var factory = new OpsPortalApiFactory();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost")
+        });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
+
+        var title = $"Update Status Work Item {Guid.NewGuid():N}";
+
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/work-items",
+            new { title });
+
+        var created = await createResponse.Content.ReadFromJsonAsync<WorkItem>();
+
+        Assert.NotNull(created);
+
+        // Act - PATCH Title with whitespace value
+        var patchBody = new Dictionary<string, string>
+        {
+            [field] = invalidValue
+        };
+
+        var patchResponse = await client.PatchAsJsonAsync(
+            $"/api/work-items/{created.Id}",
+            patchBody);
+
+        // Assert - HTTP/400
+        Assert.Equal(HttpStatusCode.BadRequest, patchResponse.StatusCode);
+
+        var getResponse = await client.GetAsync($"/api/work-items/{created.Id}");
+        var fetched = await getResponse.Content.ReadFromJsonAsync<WorkItem>();
+
+        // Assert fields are not updated
+        Assert.NotNull(fetched);
+        Assert.Equal(created.Title, fetched.Title);
+        Assert.Equal(created.Status, fetched.Status);
+        Assert.Equal(created.UpdatedAtUtc, fetched.UpdatedAtUtc);
+    }
+
     [Fact]
     public async Task Create_work_item_then_Delete_then_getById_returns_not_found()
     {
