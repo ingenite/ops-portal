@@ -113,3 +113,7 @@ remain later topics.
 
 - This is not an operational EUC tool.
 - This project will not connect to employer systems, data, or credentials.
+
+## License
+
+OpsPortal is licensed under the [MIT License](LICENSE).
