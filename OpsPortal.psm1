@@ -37,11 +37,3 @@ function Invoke-EFDatabaseUpdate {
     & dotnet ef database update --project .\src\OpsPortal.Api --startup-project .\src\OpsPortal.Api
 }
 #endregion
-
-#region ApiTests
-
-#endregion
-
-#region dotNetBuildTest
-
-#endregion

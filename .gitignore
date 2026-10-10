@@ -6,6 +6,7 @@
 # dotenv files
 .env
 /infra/keycloak.env
+/infra/.env.bak
 
 # User-specific files
 *.rsuser
