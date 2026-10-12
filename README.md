@@ -51,6 +51,12 @@ http://localhost:5096/swagger
 
 Swagger UI is available in the Development environment. It displays the generated OpenAPI contract and supports executing requests against the running API.
 
+Click **Authorize**, use the **Keycloak** option, and sign in with a local test
+user. Swagger obtains the access token through Authorization Code with PKCE
+and sends it with requests. The **Bearer** option also accepts an existing
+access token. See the [Swagger sign-in recovery notes](docs/swagger-authentication.md)
+to recreate the Keycloak client when restoring the development environment.
+
 All Work Items, Reporting, and Applications endpoints require a valid Keycloak
 access token. Requests without authentication return `401 Unauthorized`;
 authenticated callers without the required role receive `403 Forbidden`.
@@ -74,6 +80,14 @@ must include a bearer access token with the appropriate role. See the
 - **Background processing:** Optional application synchronization in the API host, with shared coordination for manual and scheduled runs
 - **Identity:** Keycloak OIDC sign-in, JWT bearer authentication, and API-enforced Reader/Admin authorization
 - **Tests:** Frontend unit tests and backend API/unit tests
+
+The browser handles interaction and presentation. The API validates requests,
+enforces authorization, integrates with external services, and owns database
+access and reporting queries. [ADR 0001](docs/adr/0001-use-a-backend-for-frontend.md)
+describes this backend-for-frontend role. Keycloak sign-in runs in the SPA,
+which holds the user's access token and forwards it with API requests; the API
+validates the token and enforces the
+[endpoint role policies](docs/authorization-role-mapping.md).
 
 ## Implemented features
 
@@ -109,10 +123,12 @@ Applications UI integration and work item application selection remain planned.
 Summary cards, charts, navigation for multiple reports, and CSS/UI-framework work
 remain later topics.
 
-## Non-goals
+## Project scope
 
-- This is not an operational EUC tool.
-- This project will not connect to employer systems, data, or credentials.
+OpsPortal models generic operations workflows for personal learning and
+portfolio demonstrations. Development uses synthetic records and personal
+development environments. Employer systems, data, credentials, endpoints, and
+business logic are outside the project scope.
 
 ## License
 

@@ -11,6 +11,8 @@ namespace OpsPortal.Api.Controllers;
 
 [ApiController]
 [Route("api/applications")]
+[ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
+[ProducesResponseType(typeof(void), StatusCodes.Status403Forbidden)]
 public sealed class ApplicationsController : ControllerBase
 {
     private readonly ApplicationQuery _applicationQuery;
@@ -31,6 +33,7 @@ public sealed class ApplicationsController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = "CanRead")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<ApplicationListRow>>> GetAll(
         CancellationToken cancellationToken)
     {
@@ -43,6 +46,9 @@ public sealed class ApplicationsController : ControllerBase
 
     [HttpPost("sync")]
     [Authorize(Policy = "CanWrite")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status502BadGateway)]
     public async Task<IActionResult> SyncApplications(
         CancellationToken cancellationToken)
     {

@@ -18,6 +18,24 @@ Web API as a backend-for-frontend (BFF). The SPA will call the API; the API will
 own database access, external-service integration, credential handling,
 validation, and API-to-UI data-shape adaptation.
 
+### Implementation clarification (2026-10-12)
+
+Here, BFF describes the API's integration and data-shaping role for the React
+client. The browser owns user interaction and presentation; the API owns
+request validation, authorization, external-service integration, persistence,
+and database-backed reporting. External-service credentials stay in the API.
+
+User authentication uses Keycloak OIDC in the SPA. The browser holds the user's
+access token and sends it as a bearer token with API requests. The API validates
+the JWT and enforces Reader/Admin authorization policies. This implementation
+uses browser-held tokens rather than an API-managed cookie session with
+server-side user-token storage. See the
+[authorization role mapping](../authorization-role-mapping.md) for the current
+endpoint permissions.
+
+This clarification records the current implementation without changing the
+original SPA/API boundary decision.
+
 ## Alternatives considered
 
 ### SPA calls external APIs directly
@@ -39,7 +57,7 @@ building and operating a separate SPA and API.
 ## Consequences
 
 The project has an additional application to develop, test, and deploy. In
-return, the API provides a stable boundary for the SPA, keeps credentials
-server-side, centralizes validation and authorization, and allows external
-integrations or persistence implementations to change without directly
+return, the API provides a stable boundary for the SPA, keeps external-service
+credentials server-side, centralizes validation and authorization, and allows
+external integrations or persistence implementations to change without directly
 affecting the browser client.

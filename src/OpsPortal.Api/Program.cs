@@ -1,8 +1,11 @@
 using System.Net.Http.Headers;
 using System.Text;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using OpsPortal.Api.Data;
 using OpsPortal.Api.Integrations.Atlassian;
 using OpsPortal.Api.Reporting;
@@ -17,7 +20,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+});
 
 var connectionString = builder.Configuration.GetConnectionString("OpsPortalDatabase")
     ?? throw new InvalidOperationException(
@@ -134,6 +140,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/openapi/v1.json", "OpsPortal API v1");
+        options.OAuthClientId("opsportal-swagger");
+        options.OAuthScopes("openid");
+        options.OAuthUsePkce();
     });
 }
 
@@ -144,6 +153,71 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+internal sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvider authenticationSchemeProvider,
+    IConfiguration configuration) : IOpenApiDocumentTransformer
+{
+    public async Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
+    {
+        var authenticationSchemes = await authenticationSchemeProvider.GetAllSchemesAsync();
+        if (authenticationSchemes.Any(authScheme => authScheme.Name == "Bearer"))
+        {
+            var authority = configuration["Api:Authority"]?.TrimEnd('/')
+                ?? throw new InvalidOperationException("Api:Authority is required.");
+            var securitySchemes = new Dictionary<string, IOpenApiSecurityScheme>
+            {
+                ["Bearer"] = new OpenApiSecurityScheme
+                {
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer", // "bearer" refers to the header name here
+                    In = ParameterLocation.Header,
+                    BearerFormat = "Json Web Token"
+                },
+                ["Keycloak"] = new OpenApiSecurityScheme
+                {
+                    Type = SecuritySchemeType.OAuth2,
+                    Flows = new OpenApiOAuthFlows
+                    {
+                        AuthorizationCode = new OpenApiOAuthFlow
+                        {
+                            AuthorizationUrl = new Uri(
+                                $"{authority}/protocol/openid-connect/auth"),
+                            TokenUrl = new Uri(
+                                $"{authority}/protocol/openid-connect/token"),
+                            Scopes = new Dictionary<string, string>
+                            {
+                                ["openid"] = "Sign in with Keycloak"
+                            }
+                        }
+                    }
+                }
+            };
+            document.Components ??= new OpenApiComponents();
+            document.Components.SecuritySchemes = securitySchemes;
+
+            foreach (var path in document.Paths.Values)
+            {
+                if (path.Operations is null)
+                {
+                    continue;
+                }
+
+                foreach (var operation in path.Operations.Values)
+                {
+                    operation.Security ??= [];
+                    operation.Security.Add(new OpenApiSecurityRequirement
+                    {
+                        [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+                    });
+                    operation.Security.Add(new OpenApiSecurityRequirement
+                    {
+                        [new OpenApiSecuritySchemeReference("Keycloak", document)] = ["openid"]
+                    });
+                }
+            }
+        }
+    }
+}
 
 // Expose top-level API entry point to test assembly
 public partial class Program { }

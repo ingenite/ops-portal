@@ -5,6 +5,11 @@ in through OIDC and sends bearer access tokens to the API. JWT bearer
 authentication validates those tokens, and Keycloak realm roles are mapped to
 role claims for authorization.
 
+Swagger UI can also sign in through Keycloak using the `opsportal-swagger`
+public client. It obtains a bearer access token and uses the same API policies
+as the SPA. Client configuration and restore checks are in the
+[Swagger sign-in recovery notes](swagger-authentication.md).
+
 `CanRead` requires an authenticated Reader or Admin. `CanWrite` requires an
 authenticated Admin.
 

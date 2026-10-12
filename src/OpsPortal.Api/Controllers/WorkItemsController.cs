@@ -12,6 +12,8 @@ namespace OpsPortal.Api.Controllers;
 
 [ApiController]
 [Route("api/work-items")]
+[ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
+[ProducesResponseType(typeof(void), StatusCodes.Status403Forbidden)]
 public sealed class WorkItemsController : ControllerBase
 {
     private readonly IWorkItemStore _workItemStore;
@@ -29,6 +31,7 @@ public sealed class WorkItemsController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = "CanRead")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyCollection<WorkItem>>> GetAll()
     {
         return Ok(await _workItemStore.GetAllAsync());
@@ -36,6 +39,8 @@ public sealed class WorkItemsController : ControllerBase
 
     [HttpGet("{id:guid}")]
     [Authorize(Policy = "CanRead")]
+    [ProducesResponseType<WorkItem>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<WorkItem>> GetById(Guid id)
     {
         var workItem = await _workItemStore.GetByIdAsync(id);
@@ -47,6 +52,8 @@ public sealed class WorkItemsController : ControllerBase
 
     [HttpPost]
     [Authorize(Policy = "CanWrite")]
+    [ProducesResponseType<WorkItem>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<WorkItem>> Create(
         CreateWorkItemRequest request,
         CancellationToken cancellationToken)
@@ -81,6 +88,9 @@ public sealed class WorkItemsController : ControllerBase
 
     [HttpPatch("{id:guid}")]
     [Authorize(Policy = "CanWrite")]
+    [ProducesResponseType<WorkItem>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<WorkItem>> Update(Guid id, UpdateWorkItemRequest request)
     {
         if (request.Title is null && request.Status is null)
@@ -102,6 +112,8 @@ public sealed class WorkItemsController : ControllerBase
 
     [HttpDelete("{id:guid}")]
     [Authorize(Policy = "CanWrite")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id)
     {
         return await _workItemStore.DeleteAsync(id)
