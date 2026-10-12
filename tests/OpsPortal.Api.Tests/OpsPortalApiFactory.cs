@@ -63,7 +63,8 @@ public sealed class OpsPortalApiFactory : WebApplicationFactory<Program>
 
     internal WebApplicationFactory<Program> WithDatabase(
         TestDatabase database,
-        IAtlassianAssetsClient? provider = null)
+        IAtlassianAssetsClient? provider = null,
+        bool useSqlWorkItemStore = false)
     {
         return WithWebHostBuilder(builder =>
         {
@@ -75,6 +76,12 @@ public sealed class OpsPortalApiFactory : WebApplicationFactory<Program>
                 {
                     services.RemoveAll<IAtlassianAssetsClient>();
                     services.AddSingleton<IAtlassianAssetsClient>(provider);
+                }
+
+                if (useSqlWorkItemStore)
+                {
+                    services.RemoveAll<IWorkItemStore>();
+                    services.AddScoped<IWorkItemStore, SqlWorkItemStore>();
                 }
             });
         });

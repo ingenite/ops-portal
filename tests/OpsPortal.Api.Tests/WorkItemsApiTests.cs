@@ -5,6 +5,7 @@ using System.Text.Json;
 using OpsPortal.Api.Models;
 
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
 
 namespace OpsPortal.Api.Tests;
 
@@ -123,6 +124,164 @@ public sealed class WorkItemsApiTests
 
         // Assert - HTTP/400
         Assert.Equal(HttpStatusCode.BadRequest, createResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_with_valid_application_returns_and_persists_application_association()
+    {
+        // Arrange
+        using var database = new TestDatabase();
+        var application = ApplicationTestData.Create("22", "Demo CRM");
+        using (var context = database.CreateContext())
+        {
+            context.Applications.Add(application);
+            await context.SaveChangesAsync();
+        }
+
+        using var factory = new OpsPortalApiFactory();
+        using var applicationFactory = factory.WithDatabase(database, null, true);
+
+        using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost")
+        });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
+
+        var title = $"Integration test item {Guid.NewGuid():N}";
+        var applicationId = application.Id;
+
+        // Act
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/work-items",
+            new { title, applicationId });
+
+        // Assert - Work Item is created
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var created = await createResponse.Content.ReadFromJsonAsync<WorkItem>();
+        Assert.NotNull(created);
+        Assert.Equal(applicationId, created.ApplicationId);
+
+        var location = Assert.IsType<Uri>(createResponse.Headers.Location);
+        var getResponse = await client.GetAsync(location);
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+        var fetched = await getResponse.Content.ReadFromJsonAsync<WorkItem>();
+        Assert.NotNull(fetched);
+        Assert.Equal(created.Id, fetched.Id);
+        Assert.Equal(applicationId, fetched.ApplicationId);
+
+        using var verification = database.CreateContext();
+        var row = Assert.Single(await verification.WorkItems.ToListAsync());
+
+        Assert.Equal(fetched.Id, row.Id);
+        Assert.Equal(applicationId, row.ApplicationId);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Create_without_application_returns_and_persists_unassociated_work_item(
+        bool includeExplicitNull)
+    {
+        using var database = new TestDatabase();
+        using var factory = new OpsPortalApiFactory();
+        using var applicationFactory = factory.WithDatabase(database, null, true);
+        using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost")
+        });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
+
+        var requestBody = new Dictionary<string, object?>
+        {
+            ["title"] = $"Integration test item {Guid.NewGuid():N}"
+        };
+
+        if (includeExplicitNull)
+        {
+            requestBody["applicationId"] = null;
+        }
+
+        // Act
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/work-items",
+            requestBody);
+
+        // Assert - Work Item is created
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var created = await createResponse.Content.ReadFromJsonAsync<WorkItem>();
+        Assert.NotNull(created);
+        Assert.Null(created.ApplicationId);
+
+        using var verification = database.CreateContext();
+        var row = Assert.Single(await verification.WorkItems.ToListAsync());
+
+        Assert.Equal(created.Id, row.Id);
+        Assert.Null(row.ApplicationId);
+    }
+
+    [Fact]
+    public async Task Create_with_nonexistent_application_returns_bad_request_without_persisting_work_item()
+    {
+        using var database = new TestDatabase();
+        using var factory = new OpsPortalApiFactory();
+        using var applicationFactory = factory.WithDatabase(database, null, true);
+        using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost")
+        });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
+
+        var title = $"Integration test item {Guid.NewGuid():N}";
+        var applicationId = Guid.NewGuid();
+
+        // Act
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/work-items",
+            new { title, applicationId });
+
+        Assert.Equal(HttpStatusCode.BadRequest, createResponse.StatusCode);
+
+        using var verification = database.CreateContext();
+        Assert.Empty(await verification.WorkItems.ToListAsync());
+    }
+
+    [Fact]
+    public async Task Create_with_application_from_another_workspace_returns_bad_request_without_persisting_work_item()
+    {
+        using var database = new TestDatabase();
+        var application = ApplicationTestData.Create("22", "Demo CRM");
+        application.WorkspaceId = "other-workspace-id";
+        using (var context = database.CreateContext())
+        {
+            context.Applications.Add(application);
+            await context.SaveChangesAsync();
+        }
+
+        using var factory = new OpsPortalApiFactory();
+        using var applicationFactory = factory.WithDatabase(database, null, true);
+        using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost")
+        });
+        client.DefaultRequestHeaders.Add("X-Test-User", "Test admin");
+        client.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
+
+        var title = $"Integration test item {Guid.NewGuid():N}";
+        var applicationId = application.Id;
+
+        // Act
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/work-items",
+            new { title, applicationId });
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, createResponse.StatusCode);
+
+        using var verification = database.CreateContext();
+        Assert.Empty(await verification.WorkItems.ToListAsync());
     }
 
     [Fact]
