@@ -1,0 +1,57 @@
+name: OpsPortal CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions: 
+  contents: read
+
+jobs:
+  api:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+    - name: Restore dependencies
+      run: dotnet restore ./OpsPortal.sln
+    - name: Build
+      run: dotnet build ./OpsPortal.sln --no-restore --configuration Release
+    - name: Test
+      env:
+        ConnectionStrings__OpsPortalDatabase: "Server=unused;Database=unused;Integrated Security=true"
+      run: dotnet test ./OpsPortal.sln --no-build --verbosity normal --configuration Release
+    - name: Whitespace Check
+      run:  dotnet format whitespace ./OpsPortal.sln --no-restore --verify-no-changes
+  web:
+    defaults:
+      run:
+        working-directory: src/OpsPortal.Web
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [24.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: src/OpsPortal.Web/package-lock.json
+    - run: npm ci
+    - run: npm run build
+    - run: npm test
+    - run: npm run lint
+    - run: npm run format:check
