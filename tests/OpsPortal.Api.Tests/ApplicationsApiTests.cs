@@ -47,9 +47,12 @@ public sealed class ApplicationsApiTests
         using var database = new TestDatabase();
         using var factory = new OpsPortalApiFactory();
         const string providerError = "Private fake provider diagnostic";
-        var provider = new FailingAtlassianAssetsClient(providerError);
-        using var applicationFactory = factory.WithDatabase(database, provider);
+        var provider = new FakeAtlassianAssetsClient(new AtlassianAssetsQueryResponse())
+        {
+            Failure = new Exception(providerError)
+        };
 
+        using var applicationFactory = factory.WithDatabase(database, provider);
         using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions
         {
             BaseAddress = new Uri("https://localhost")
@@ -73,7 +76,11 @@ public sealed class ApplicationsApiTests
         using var database = new TestDatabase();
         using var factory = new OpsPortalApiFactory();
         const string providerError = "Private fake provider diagnostic";
-        var provider = new FailingAtlassianAssetsClient(providerError);
+        var provider = new FakeAtlassianAssetsClient(new AtlassianAssetsQueryResponse())
+        {
+            Failure = new HttpRequestException(providerError, null, HttpStatusCode.Forbidden)
+        };
+
         using var applicationFactory = factory.WithDatabase(database, provider);
         using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions
         {
@@ -174,10 +181,13 @@ public sealed class ApplicationsApiTests
             await context.SaveChangesAsync();
         }
 
-        var provider = new FailingAtlassianAssetsClient("Private fake provider diagnostic");
+        var provider = new FakeAtlassianAssetsClient(new AtlassianAssetsQueryResponse())
+        {
+            Failure = new Exception("Private fake provider diagnostic")
+        };
+
         using var factory = new OpsPortalApiFactory();
         using var applicationFactory = factory.WithDatabase(database, provider);
-
         using var client = applicationFactory.CreateClient(new WebApplicationFactoryClientOptions
         {
             BaseAddress = new Uri("https://localhost")
@@ -232,24 +242,5 @@ public sealed class ApplicationsApiTests
             rows.Select(row => row.GetProperty("externalId").GetString()));
         Assert.Equal(JsonValueKind.Null, rows[0].GetProperty("deploymentMethod").ValueKind);
         Assert.Equal(JsonValueKind.Null, rows[0].GetProperty("status").ValueKind);
-    }
-
-    private sealed class FailingAtlassianAssetsClient : IAtlassianAssetsClient
-    {
-        private readonly string _message;
-        public int CallCount { get; private set; }
-
-        public FailingAtlassianAssetsClient(string message)
-        {
-            _message = message;
-        }
-
-        public Task<AtlassianAssetsQueryResponse> GetApplicationsAsync(
-            CancellationToken cancellationToken)
-        {
-            CallCount++;
-            return Task.FromException<AtlassianAssetsQueryResponse>(
-                new HttpRequestException(_message, null, HttpStatusCode.Forbidden));
-        }
     }
 }

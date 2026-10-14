@@ -18,7 +18,12 @@ public sealed class ApplicationSyncServiceTests
         using var database = new TestDatabase();
         var before = DateTimeOffset.UtcNow;
 
-        await Sync(database, new ProviderFake(Asset("22"), Asset("23")));
+        var response = new AtlassianAssetsQueryResponse
+        {
+            Values = [Asset("22"), Asset("23")]
+        };
+
+        await Sync(database, new FakeAtlassianAssetsClient(response));
 
         using var verification = database.CreateContext();
         var rows = await verification.Applications.OrderBy(app => app.ObjectId).ToListAsync();
@@ -43,7 +48,13 @@ public sealed class ApplicationSyncServiceTests
     public async Task Repeated_sync_preserves_local_identity_and_refreshes_timestamp()
     {
         using var database = new TestDatabase();
-        var provider = new ProviderFake(Asset("22"));
+
+        var response = new AtlassianAssetsQueryResponse
+        {
+            Values = [Asset("22")]
+        };
+
+        var provider = new FakeAtlassianAssetsClient(response);
         await Sync(database, provider);
         Guid originalId;
         using (var context = database.CreateContext())
@@ -74,7 +85,12 @@ public sealed class ApplicationSyncServiceTests
         var original = LocalApplication("22");
         await Seed(database, original);
 
-        await Sync(database, new ProviderFake(Asset("22", "Renamed CRM", deploymentMethod, status)));
+        var response = new AtlassianAssetsQueryResponse
+        {
+            Values = [Asset("22", "Renamed CRM", deploymentMethod, status)]
+        };
+
+        await Sync(database, new FakeAtlassianAssetsClient(response));
 
         using var verification = database.CreateContext();
         var actual = Assert.Single(await verification.Applications.ToListAsync());
@@ -95,7 +111,12 @@ public sealed class ApplicationSyncServiceTests
         var other = LocalApplication("22", "other-workspace");
         await Seed(database, other);
 
-        await Sync(database, new ProviderFake(Asset("22")));
+        var response = new AtlassianAssetsQueryResponse
+        {
+            Values = [Asset("22")]
+        };
+
+        await Sync(database, new FakeAtlassianAssetsClient(response));
 
         using var verification = database.CreateContext();
         var rows = await verification.Applications.ToListAsync();
@@ -118,7 +139,15 @@ public sealed class ApplicationSyncServiceTests
         using var database = new TestDatabase();
         var original = LocalApplication("99");
         await Seed(database, original);
-        var provider = includeIncoming ? new ProviderFake(Asset("22")) : new ProviderFake();
+
+        var response = new AtlassianAssetsQueryResponse
+        {
+            Values = [Asset("22")]
+        };
+
+        var provider = includeIncoming
+            ? new FakeAtlassianAssetsClient(response)
+            : new FakeAtlassianAssetsClient(new AtlassianAssetsQueryResponse());
 
         await Sync(database, provider);
 
@@ -141,8 +170,13 @@ public sealed class ApplicationSyncServiceTests
         await Seed(database, original);
         var failure = new HttpRequestException("Fake provider failure");
 
+        var provider = new FakeAtlassianAssetsClient(new AtlassianAssetsQueryResponse())
+        {
+            Failure = failure
+        };
+
         var thrown = await Assert.ThrowsAsync<HttpRequestException>(() =>
-            Sync(database, new ProviderFake { Failure = failure }));
+            Sync(database, provider));
 
         Assert.Same(failure, thrown);
         using var verification = database.CreateContext();
@@ -159,7 +193,12 @@ public sealed class ApplicationSyncServiceTests
     {
         using var database = new TestDatabase();
 
-        await Sync(database, new ProviderFake(Asset("22"), Asset("22")));
+        var response = new AtlassianAssetsQueryResponse
+        {
+            Values = [Asset("22"), Asset("22")]
+        };
+
+        await Sync(database, new FakeAtlassianAssetsClient(response));
 
         using var verification = database.CreateContext();
         var actual = Assert.Single(await verification.Applications.ToListAsync());
@@ -172,7 +211,12 @@ public sealed class ApplicationSyncServiceTests
         using var database = new TestDatabase();
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
-        var provider = new ProviderFake(Asset("22"));
+
+        var response = new AtlassianAssetsQueryResponse
+        {
+            Values = [Asset("22")]
+        };
+        var provider = new FakeAtlassianAssetsClient(response);
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
             Sync(database, provider, cancellation.Token));
@@ -223,19 +267,4 @@ public sealed class ApplicationSyncServiceTests
                 status is null ? [] : [new() { DisplayValue = status }] }
         ]
         };
-
-    private sealed class ProviderFake(params AtlassianAssetObject[] assets) : IAtlassianAssetsClient
-    {
-        public Exception? Failure { get; init; }
-        public CancellationToken ReceivedToken { get; private set; }
-
-        public Task<AtlassianAssetsQueryResponse> GetApplicationsAsync(CancellationToken cancellationToken)
-        {
-            ReceivedToken = cancellationToken;
-            cancellationToken.ThrowIfCancellationRequested();
-            return Failure is null
-                ? Task.FromResult(new AtlassianAssetsQueryResponse { Values = assets.ToList() })
-                : Task.FromException<AtlassianAssetsQueryResponse>(Failure);
-        }
-    }
 }
