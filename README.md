@@ -97,6 +97,7 @@ validates the token and enforces the
 - Repeatable application synchronization that preserves local identity, updates descriptive fields, and records the last successful refresh time for each imported record.
 - Applications API for reading the stored copy and requesting manual synchronization. Stored reads do not depend on a successful provider request.
 - Optional background synchronization with an initial run and a five-minute interval. Manual and background runs share overlap protection within one API process.
+- Background synchronization logs recoverable HTTP, JSON, database, and non-shutdown cancellation failures, then retries on the next scheduled run. Shutdown cancellation releases the gate without logging an error.
 - Optional application associations when creating work items through the API, validated against the configured workspace. Application selection and an Applications view remain pending in the React interface.
 - Database-backed status-count report displayed in a semantic table.
 - Navigation between Work Items and Reporting. Opening Reporting fetches current counts.
@@ -108,8 +109,7 @@ validates the token and enforces the
 - Authorization integration tests for all eight endpoints, including proof that denied sync requests do not call the external provider.
 
 The application import currently reads one bounded provider page and retains
-stored records absent from later responses. Worker recovery currently handles
-HTTP request failures; broader failure recovery remains unfinished. The
+stored records absent from later responses. The
 [learning roadmap](docs/roadmap.md) describes these milestones and remaining work.
 
 ## Planned features
