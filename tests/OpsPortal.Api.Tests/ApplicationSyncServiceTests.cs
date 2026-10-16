@@ -254,7 +254,7 @@ public sealed class ApplicationSyncServiceTests
         LastSyncedAtUtc = OldSync
     };
 
-    private static AtlassianAssetObject Asset(string id, string name = "Demo CRM",
+    internal static AtlassianAssetObject Asset(string id, string name = "Demo CRM",
         string? deploymentMethod = "Cloud", string? status = "Test") => new()
         {
             Id = id,

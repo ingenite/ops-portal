@@ -38,7 +38,9 @@ builder.Services.AddScoped<ApplicationSyncService>();
 builder.Services.AddScoped<ApplicationQuery>();
 
 // Coordinate manual and background application sync
+// Allow for tests to adjust time via TimeProvider
 builder.Services.AddSingleton<ApplicationSyncCoordinator>();
+builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 
 // Integrations.Atlassian
 builder.Services.AddOptions<AtlassianOptions>()

@@ -17,6 +17,9 @@ Chapters 1-4 describe implemented milestones and their current limits; chapter 5
 is future work. This is a learning sequence, not a commitment to a particular
 queue product or deployment topology.
 
+GitHub issues track backlog work, starting with
+[issue #1: sync worker failure recovery](https://github.com/ingenite/ops-portal/issues/1).
+
 ## 1. Read from an external provider (complete)
 
 Implemented a server-side Atlassian Assets client for application records in a
@@ -56,7 +59,7 @@ API tests verify stored reads and manual synchronization. These tests use SQLite
 and fake providers; they do not verify SQL Server migrations or live Atlassian
 behavior.
 
-## 3. Introduce background synchronization (implemented; recovery incomplete)
+## 3. Introduce background synchronization (complete)
 
 Implemented an optional background worker in the API host, enabled through
 `ApplicationSync:Enabled`. It attempts synchronization immediately and on a
@@ -69,14 +72,21 @@ when another run holds the gate. Both paths release an acquired gate in `finally
 This coordination does not extend across multiple API instances.
 
 This chapter covered worker lifetimes, dependency scopes, cancellation, logging,
-and overlap protection. The scheduling and coordination milestone is implemented;
-tests cover gate acquisition/release and manual-sync conflict behavior.
+and overlap protection. The worker logs HTTP request, JSON, database, EF Core
+save, and non-shutdown cancellation failures, releases the gate, and attempts
+synchronization again on the next scheduled tick with a fresh dependency scope.
+Shutdown cancellation during synchronization exits without an error log and
+releases the gate. Exception handling is limited to these recoverable categories;
+unexpected exceptions still propagate.
 
-Remaining checkpoint: define and verify recovery after broader failures. The
-worker currently logs HTTP request failures and continues to later runs, but
-deserialization and database failures can escape and stop the host. Worker
-recovery and shutdown need focused coverage before this chapter's original
-resilience checkpoint is complete.
+Checkpoint completed: tests cover gate acquisition/release and manual-sync
+conflict behavior. [Worker tests](../tests/OpsPortal.Api.Tests/ApplicationSyncWorkerTests.cs)
+exercise each recoverable failure category followed by a successful scheduled
+run that persists application data. An injected `TimeProvider` lets tests advance
+the five-minute schedule without waiting in real time. A separate test verifies
+shutdown during an active sync, successful worker completion, gate release, and
+no error log for shutdown cancellation. These tests use fake provider failures
+and SQLite; they do not verify live Atlassian or SQL Server failure behavior.
 
 ## 4. Add authentication and authorization (complete)
 
