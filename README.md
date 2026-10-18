@@ -1,68 +1,16 @@
 # OpsPortal
 
-A personal learning project that models the architecture and delivery practices of a modern internal web application.
+> **Learning project — not production-ready.** OpsPortal is under active development, and the local setup path is still being completed in [#8](https://github.com/ingenite/ops-portal/issues/8).
 
-The project reinforces learning from technical books through practical implementation. It also develops the knowledge needed to direct AI-assisted development: understand proposed solutions, assess architectural choices, review generated code, and verify behavior across the application.
+## Project scope
 
-## Local Development
+OpsPortal models generic operations workflows using synthetic records and personal development environments. Employer systems, data, credentials, endpoints, and business logic are outside the project scope.
 
-### Pre-Reqs
+OpsPortal provides work item tracking and status reporting, with a server-side Atlassian Assets integration that synchronizes application records into a local SQL Server database.
 
-- .NET 10 SDK
-- WSL2
-- Docker Desktop (requires WSL2)
-- Git for Windows
-- pwsh
+OpsPortal is my approach to learning new languages, frameworks, and software development concepts through practical work. Work proceeds in small, reviewable steps: understand the behavior, question assumptions, make a change, and verify the result. Documentation records decisions and known limitations; issues track remaining work.
 
-### Initial Setup
-
-1. In pwsh, run these commands from the repository root
-
-    ```powershell
-    Import-Module .\OpsPortal.psm1
-    # Append -Overwrite to backup an existing file and create a new one
-    New-EnvFile
-    ```
-
-2. Restore repo-local EF Core with `dotnet tool restore`.
-3. Configure `ConnectionStrings:OpsPortalDatabase` with dotnet User Secrets
-
-    ```powershell
-    Set-dotNetUserSecret
-    ```
-
-4. Start SQL container
-
-    ```powershell
-    Start-SqlContainer
-    ```
-
-5. Apply existing EF Core migration
-
-    ```powershell
-    Invoke-EFDatabaseUpdate
-    ```
-
-### Verify API
-
-With the API running locally, open Swagger UI at:
-
-http://localhost:5096/swagger
-
-Swagger UI is available in the Development environment. It displays the generated OpenAPI contract and supports executing requests against the running API.
-
-Click **Authorize**, use the **Keycloak** option, and sign in with a local test
-user. Swagger obtains the access token through Authorization Code with PKCE
-and sends it with requests. The **Bearer** option also accepts an existing
-access token. See the [Swagger sign-in recovery notes](docs/swagger-authentication.md)
-to recreate the Keycloak client when restoring the development environment.
-
-All Work Items, Reporting, and Applications endpoints require a valid Keycloak
-access token. Requests without authentication return `401 Unauthorized`;
-authenticated callers without the required role receive `403 Forbidden`.
-Use the signed-in SPA to check Work Items and Reporting. Direct API requests
-must include a bearer access token with the appropriate role. See the
-[authorization role mapping](docs/authorization-role-mapping.md) for endpoint permissions.
+AI serves as a mentor or tutor to explain concepts, discuss tradeoffs, and review work. My goal is to write more than 80% of the code myself, with an emphasis on understanding and maintaining what I build. I review AI-generated code and documentation before including it, and work through unfamiliar material until I can explain the behavior and maintain the result.
 
 ## Goals
 
@@ -114,21 +62,65 @@ stored records absent from later responses. The
 
 ## Planned features
 
-The next learning chapter focuses on coordinated external write-back: queued
-updates, visible operation status, retries, and reconciliation with synchronized
-data. These capabilities are planned. See the [learning roadmap](docs/roadmap.md)
-for the sequence, learning objectives, and open design choices.
+See the [learning roadmap](docs/roadmap.md) for the sequence, learning objectives, and open design choices.
 
-Applications UI integration and work item application selection remain planned.
-Summary cards, charts, navigation for multiple reports, and CSS/UI-framework work
-remain later topics.
+## Local Development
 
-## Project scope
+### Prerequisites
 
-OpsPortal models generic operations workflows for personal learning and
-portfolio demonstrations. Development uses synthetic records and personal
-development environments. Employer systems, data, credentials, endpoints, and
-business logic are outside the project scope.
+- .NET 10 SDK
+- WSL2
+- Docker Desktop (requires WSL2)
+- Git for Windows
+- pwsh
+
+### Initial Setup
+
+1. In pwsh, run these commands from the repository root
+
+    ```powershell
+    Import-Module .\OpsPortal.psm1
+    # Append -Overwrite to back up an existing file and create a new one
+    New-EnvFile
+    ```
+
+2. Restore repo-local EF Core with `dotnet tool restore`.
+3. Configure `ConnectionStrings:OpsPortalDatabase` with dotnet User Secrets
+
+    ```powershell
+    Set-dotNetUserSecret
+    ```
+
+4. Start SQL container
+
+    ```powershell
+    Start-SqlContainer
+    ```
+
+5. Apply existing EF Core migrations
+
+    ```powershell
+    Invoke-EFDatabaseUpdate
+    ```
+
+### Verify API
+
+With the API running locally, open [Swagger UI](http://localhost:5096/swagger).
+
+Swagger UI is available in the Development environment. It displays the generated OpenAPI contract and supports executing requests against the running API.
+
+Click **Authorize**, use the **Keycloak** option, and sign in with a local test
+user. Swagger obtains the access token through Authorization Code with PKCE
+and sends it with requests. The **Bearer** option also accepts an existing
+access token. See the [Swagger sign-in recovery notes](docs/swagger-authentication.md)
+to recreate the Keycloak client when restoring the development environment.
+
+All Work Items, Reporting, and Applications endpoints require a valid Keycloak
+access token. Requests without authentication return `401 Unauthorized`;
+authenticated callers without the required role receive `403 Forbidden`.
+Use the signed-in SPA to check Work Items and Reporting. Direct API requests
+must include a bearer access token with the appropriate role. See the
+[authorization role mapping](docs/authorization-role-mapping.md) for endpoint permissions.
 
 ## License
 
