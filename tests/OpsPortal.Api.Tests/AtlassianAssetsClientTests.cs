@@ -5,8 +5,6 @@ using Microsoft.Extensions.Options;
 
 using OpsPortal.Api.Integrations.Atlassian;
 
-using Xunit.Sdk;
-
 namespace OpsPortal.Api.Tests;
 
 public sealed class AtlassianAssetsClientTests

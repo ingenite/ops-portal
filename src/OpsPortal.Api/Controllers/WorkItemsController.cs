@@ -1,12 +1,12 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 using OpsPortal.Api.Contracts;
-using OpsPortal.Api.Models;
-using OpsPortal.Api.Storage;
 using OpsPortal.Api.Data;
 using OpsPortal.Api.Integrations.Atlassian;
+using OpsPortal.Api.Models;
+using OpsPortal.Api.Storage;
 
 namespace OpsPortal.Api.Controllers;
 

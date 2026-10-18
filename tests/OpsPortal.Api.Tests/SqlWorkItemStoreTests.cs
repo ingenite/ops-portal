@@ -1,7 +1,7 @@
 
-using OpsPortal.Api.Storage;
-
 using Microsoft.EntityFrameworkCore;
+
+using OpsPortal.Api.Storage;
 
 namespace OpsPortal.Api.Tests;
 

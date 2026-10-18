@@ -4,8 +4,8 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
-using OpsPortal.Api.Storage;
 using OpsPortal.Api.Integrations.Atlassian;
+using OpsPortal.Api.Storage;
 
 namespace OpsPortal.Api.Tests;
 
