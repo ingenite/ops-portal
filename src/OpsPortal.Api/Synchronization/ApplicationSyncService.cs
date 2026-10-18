@@ -1,9 +1,9 @@
-using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 using OpsPortal.Api.Data;
-using OpsPortal.Api.Models;
 using OpsPortal.Api.Integrations.Atlassian;
+using OpsPortal.Api.Models;
 
 namespace OpsPortal.Api.Synchronization;
 

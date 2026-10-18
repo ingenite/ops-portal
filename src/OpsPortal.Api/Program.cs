@@ -1,18 +1,20 @@
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.OpenApi;
-using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
+
 using OpsPortal.Api.Data;
 using OpsPortal.Api.Integrations.Atlassian;
 using OpsPortal.Api.Reporting;
 using OpsPortal.Api.Storage;
 using OpsPortal.Api.Synchronization;
-using System.Security.Claims;
-using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,9 +23,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi(options =>
-{
-    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
-});
+    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 
 var connectionString = builder.Configuration.GetConnectionString("OpsPortalDatabase")
     ?? throw new InvalidOperationException(
@@ -94,10 +94,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         OnTokenValidated = context =>
         {
-            var identity = context.Principal?.Identity as ClaimsIdentity;
             var realmAccess = context.Principal?.FindFirst("realm_access");
 
-            if (identity is null || realmAccess is null) return Task.CompletedTask;
+            if (context.Principal?.Identity is not ClaimsIdentity identity || realmAccess is null) return Task.CompletedTask;
 
             using var document = JsonDocument.Parse(realmAccess.Value);
 
@@ -119,19 +118,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     };
 });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("CanRead", policy =>
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("CanRead", policy =>
     {
         policy.RequireAuthenticatedUser();
         policy.RequireRole("Reader", "Admin");
-    });
-    options.AddPolicy("CanWrite", policy =>
+    })
+    .AddPolicy("CanWrite", policy =>
     {
         policy.RequireAuthenticatedUser();
         policy.RequireRole("Admin");
     });
-});
 
 var app = builder.Build();
 
@@ -220,6 +217,3 @@ internal sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvi
         }
     }
 }
-
-// Expose top-level API entry point to test assembly
-public partial class Program { }

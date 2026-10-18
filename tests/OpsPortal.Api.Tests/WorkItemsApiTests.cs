@@ -2,10 +2,10 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 
-using OpsPortal.Api.Models;
-
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+
+using OpsPortal.Api.Models;
 
 namespace OpsPortal.Api.Tests;
 
