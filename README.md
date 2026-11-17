@@ -68,7 +68,7 @@ See the [learning roadmap](docs/roadmap.md) for the sequence, learning objective
 
 ### Prerequisites
 
-- .NET 10 SDK
+- .NET 11 SDK
 - WSL2
 - Docker Desktop (requires WSL2)
 - Git for Windows
